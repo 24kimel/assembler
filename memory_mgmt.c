@@ -2,6 +2,7 @@
 * Title                 :   Memory management
 * Filename              :   memory_mgmt.c
 * Author                :   Itai Kimelman
+* Version               :   1.3.0
 *******************************************************************************/
 
 /**
@@ -10,10 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "assembler.h"
-/**
- *Doxygen tag for documenting variables and constants
- */
-
 /******************************************************************************
 * Module Variable Definitions
 *******************************************************************************/

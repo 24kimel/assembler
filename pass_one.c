@@ -1,8 +1,63 @@
+/*******************************************************************************
+* Title                 :   The First Assembler Pass
+* Filename              :   pass_one.c
+* Author                :   Itai Kimelman
+* Version               :   1.3.0
+*******************************************************************************/
+/** \file pass_one.c
+ * \brief This module performs the 1st assembler pass
+ */
+/******************************************************************************
+* Includes
+*******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "assembler.h"
-/*the algorithm for the 1st assembler pass is as follows:
+/******************************************************************************
+* Module Preprocessor Constants
+*******************************************************************************/
+#define MEMORY_MAX  pow(2,25)-1
+/******************************************************************************
+* Module Preprocessor Macros
+*******************************************************************************/
+#define memory_lim(X)   ((X)>=0 && (X)<=MEMORY_MAX)? 1:0
+/******************************************************************************
+* Module Variable Definitions
+*******************************************************************************/
+int err1; /*indicates if there's an error in the current file*/
+int err_ln; /*indicates if there's an error in the current line*/
+unsigned long ICF; /*the final value of IC*/
+unsigned long DC,DCF; /*the current and final value of DC respectfully*/
+extern int data_exists;
+/******************************************************************************
+* Function Definitions
+*******************************************************************************/
+/******************************************************************************
+* Function : pass_one_error(char *filename, unsigned long num_ln)
+*//**
+* \section Description: this function is used when an error in input occurs during the 1st pass.
+*                       it turns on the err1,err_ln flags, and prints out the name of the file and line number,
+*                       so the user will know where the error was found.
+*
+* \param  		filename - the name of the current file
+* \param        num_ln - the current line number
+*******************************************************************************/
+void pass_one_error(char* filename,unsigned long num_ln) {
+    err1 = TRUE;
+    err_ln = TRUE;
+    fprintf(stderr,"[%s | %lu]\n",filename,num_ln);
+}
+
+/******************************************************************************
+* Function : pass_one(char *filename)
+*//**
+* \section Description: this function performs the 1st assembler pass on the current file.
+*                       it follows the algorithm mentioned below.
+* \param  		filename - the name of the current file
+* \return       0 if no error was found. otherwise - 1
+* \note
+ * the algorithm for the 1st assembler pass is as follows:
  * 1. initialize IC = 100, DC = 0
  * 2. read the next line. if the file has ended, go to step 17
  * 3. if it's a comment line or an empty line, go to step 2
@@ -27,23 +82,8 @@
  * 18. save the final value of IC,DC into ICF,DCF accordingly. they will be used to build the output files
  * 19. update the value of every symbol with attribute data by adding ICF to its value
  * 20. update the data image table by adding ICF to each value
- * 21. begin the 2nd assembler pass*/
-
-/*this is the algorithm I followed when writing the function pass_one below*/
-
-int err1; /*indicates if there's an error in the current file*/
-int err_ln; /*indicates if there's an error in the current line*/
-unsigned long ICF; /*the final value of IC*/
-extern int data_exists;
-void pass_one_error(char* filename,unsigned long num_ln) {
-    err1 = TRUE;
-    err_ln = TRUE;
-    fprintf(stderr,"[%s | %lu]\n",filename,num_ln);
-}
-unsigned long DC,DCF; /*the current and final value of DC respectfully*/
-
-/*this func performs the 1st assembler pass on the file with name filename. follows the algorithm mentioned above
- * returns: 0 if no error was found, 1 if there was an error*/
+ * 21. return 0 to main (begin the 2nd assembler pass)
+*******************************************************************************/
 int pass_one(char *filename) {
     unsigned long num_ln = 0;
     long unsigned IC;
@@ -140,23 +180,23 @@ int pass_one(char *filename) {
                         }
                     }
                 }
-                } else {
-                    /*step 12:*/
-                    if(label_flag == TRUE) {
-                        if(add_symbol(IC, label, CODE,FALSE) == FALSE)
-                            pass_one_error(filename,num_ln);
-                    }
-                    /*steps 13 and 14:*/
-                    if(err_ln == FALSE) {
-                        if(order_structure(pos) == FALSE)
-                            pass_one_error(filename,num_ln);
-                    }
-                    /*step 15:*/
-                    if(err_ln == FALSE) {
-                        cmd_to_info(pos,IC);
-                    }
-                    IC+=4; /*step 16*/
+            } else {
+                /*step 12:*/
+                if(label_flag == TRUE) {
+                    if(add_symbol(IC, label, CODE,FALSE) == FALSE)
+                        pass_one_error(filename,num_ln);
                 }
+                /*steps 13 and 14:*/
+                if(err_ln == FALSE) {
+                    if(order_structure(pos) == FALSE)
+                        pass_one_error(filename,num_ln);
+                }
+                /*step 15:*/
+                if(err_ln == FALSE) {
+                    cmd_to_info(pos,IC);
+                }
+                IC+=4; /*step 16*/
+            }
         }
     }
     /*step 17:*/
@@ -183,3 +223,4 @@ int pass_one(char *filename) {
     update_symbol_table(ICF);
     return 0;
 }
+/*************** END OF FUNCTIONS ***************************************************************************/

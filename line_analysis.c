@@ -1,10 +1,35 @@
+/*******************************************************************************
+* Title                 :   Line Analysis
+* Filename              :   line_analysis.c
+* Author                :   Itai Kimelman
+* Version               :   1.3.0
+*******************************************************************************/
+/** \file line_analysis.c
+ * \brief This file contains function that help analyzing each line in the source file
+ */
+/******************************************************************************
+* Includes
+*******************************************************************************/
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "assembler.h"
-
-/*this func returns TRUE if the length of this line does not go over 80 characters. It will report an error if not*/
+/******************************************************************************
+* Function Definitions
+*******************************************************************************/
+/******************************************************************************
+* Function : length_check(char *line)
+*//**
+* \section Description: This function checks if the length of the line is over 80 characters
+*
+* This function is used to check if the current line is too long. report error if so
+*
+* \param  		line - the current line
+*
+* \return 		TRUE if the length of the current line is fine.
+*
+*******************************************************************************/
 int length_check(char *line) {
     /*subtracting the newline character from the character count, then checking if there are characters in the line than the maximum allowed*/
     if(strlen(line)-1 > MAX_LINE) {
@@ -14,22 +39,46 @@ int length_check(char *line) {
     /*there are 80 or fewer characters in this line -> no error*/
     return TRUE;
 }
-/*return TRUE on success FALSE if last line
- * fp - input file, line - pre allocated string with size of MAX_LINE+1 chars*/
+
+/******************************************************************************
+* Function : read_line(FILE *fp, char* line)
+*//**
+* \section Description: reads the next input line from the current file.
+*
+* \param  		line - the current line
+* \param        fp - the current file
+* \return 		TRUE if EOF did not occur
+*
+*******************************************************************************/
 int read_line(FILE *fp, char* line) {
     if(fgets(line, MAX_LINE, fp) == NULL)
         return FALSE;
     return TRUE;
 }
 
-
-/*returns non-zero if the character c is a white space but is not the end of the line/file*/
+/******************************************************************************
+* Function : spaceln(char)
+*//**
+* \section Description: checks if the current character is a white space (and not newline or EOF)
+*
+* \param  		c - the current character
+* \return 		TRUE if the current character is a white space (and not newline or EOF)
+*
+*******************************************************************************/
 int spaceln(char c) {
     if(isspace(c) && c!='\n' && c!=EOF) return TRUE;
     return FALSE;
 }
 
-/*returns non-zero if the line is empty*/
+/******************************************************************************
+* Function : empty(char *line)
+*//**
+* \section Description: checks if the current line is empty (only white spaces)
+*
+* \param  		line - the current line
+* \return 		TRUE if the current line is empty of non-white characters
+*
+*******************************************************************************/
 int empty(char *line) {
     char *ptr;
     if(strcmp(line,"") == 0)
@@ -44,6 +93,19 @@ int empty(char *line) {
     return FALSE;
 }
 
+/******************************************************************************
+* Function : intlen(char *line)
+*//**
+* \section Description: checks the length of the string that represents
+*          an integer starting at the address of the current line
+*          (example: intlen("-445") = 4)
+*
+* \param  		line - the current line
+* \return 		0 if there is no integer starting at the position of line.
+*               otherwise, the length of the string that represents
+*               an integer starting at the address of the current line
+*
+*******************************************************************************/
 int intlen(char *line) {
     char *ptr;
     int i;
@@ -61,7 +123,17 @@ int intlen(char *line) {
     return i;
 }
 
-/*this method will return non-zero if the assembler will skip this line(if this line is empty or a comment line)*/
+/******************************************************************************
+* Function : meaningless(char *line)
+*//**
+* \section Description: checks if the current line is meaningless to the assembler
+*                       (an empty line or a comment line)
+*                       (a comment line is a line that its 1st non-white character is ';')
+*
+* \param  		line - the current line
+* \return 		TRUE if the current line is meaningless to the assembler
+*
+*******************************************************************************/
 int meaningless(char *line) {
     char *ptr = line;
     if(*ptr == '\n' || *ptr == ';' || *ptr == EOF)
@@ -69,11 +141,22 @@ int meaningless(char *line) {
     return FALSE;
 }
 
+/******************************************************************************
+* Function : start_label(char *line)
+*//**
+* \section Description: checks if the 1st field in the line is a label
+*
+* \param  		line - the current line
+* \return 		TRUE if the 1st field in the line is a label
+*
+*******************************************************************************/
 int start_label(char *line) {
+    int is_label(char *line, int err);
     int i = 0;
     char *word;
     word = (char*) malloc (sizeof(char) * MAX_LINE+1);
     alloc_check(word);
+    /*scanning the 1st field into word*/
     while(!isspace(line[i])) {
         word[i] = line[i];
         i++;
@@ -84,6 +167,7 @@ int start_label(char *line) {
         return FALSE;
     }
     strtok(word,":");
+    /*checking if the string before ':' is a valid label*/
     if(!is_label(word,0)) {
         free(word);
         return FALSE;
@@ -92,9 +176,22 @@ int start_label(char *line) {
     return TRUE;
 }
 
-/*returns non-zero if the next word in line can be a label. According to
- * page 28 in manual, a string can be a label if it only contains characters that are
- * alphanumeric, starts with a letter, and contains up to 31 characters.*/
+/******************************************************************************
+* Function : is_label(char *line, int err)
+*//**
+* \section Description: checks if the 1st field in the string pointed by label is a label
+*
+* \param  		line - the current line (or part of it)
+* \param        err - flag for error reporting.
+*
+* \note:        for example: the line ".add $3,$5,$9" is perfectly fine,
+*               but it dos not have a label in it. in pass_one.c we check if the 1st field in this line is a label,
+*               and we use this function. we should not report an error if the line does not start with a label for it is optional.
+*               hence the need for the flag "err"
+*
+* \note:        a valid label is a string with max length of 31 that starts with a letter, and contains only alphanumeric characters
+* \return 		TRUE if the 1st field in the line is a label
+*******************************************************************************/
 int is_label(char *line, int err) {
     char *ptr = line;
     int i = 0;
@@ -119,8 +216,17 @@ int is_label(char *line, int err) {
     return TRUE;
 }
 
-/**/
-void scan_label (char *line, char*label) {
+/******************************************************************************
+* Function : scan_label(char *line, char *label)
+*//**
+* \section Description: scans the label from the current line to label.
+* This function is only used when we know we have a valid label
+*
+* \param  		line - the current line(or part of it)
+* \param        label - the label we write into. has to have allocated memory to it before
+*
+*******************************************************************************/
+void scan_label (char *line, char *label) {
     int i;
     i=0;
     while(!isspace(line[i]) && line[i]!=':') {
@@ -130,6 +236,14 @@ void scan_label (char *line, char*label) {
     label[i] = '\0';
 }
 
+/******************************************************************************
+* Function : is_data(char *line)
+*//**
+* \section Description: this function checks if this line is a data storage directive
+*
+* \param  		line - the current line(or part of it)
+* \return       0 if not data directive. otherwise, the number associated with the directive detected
+*******************************************************************************/
 int is_data(char *line) {
     int i = 0;
     int retval = 0;
@@ -152,6 +266,14 @@ int is_data(char *line) {
     return retval;
 }
 
+/******************************************************************************
+* Function : ent_ext(char *line)
+*//**
+* \section Description: this function checks if this line is an .entry or .extern directive
+*
+* \param  		line - the current line(or part of it)
+* \return       1 if .entry, 2 if .extern. 0 otherwise
+*******************************************************************************/
 int ent_ext(char *line) {
     int i = 0;
     char *word = (char*) malloc(sizeof(char) * (MAX_LINE+1));
@@ -168,6 +290,14 @@ int ent_ext(char *line) {
     return 0;
 }
 
+/******************************************************************************
+* Function : check_immed(char *line)
+*//**
+* \section Description: this function checks the line points to an operand that is a whole number. if not, it reports an error
+*
+* \param  		line - the current line(or part of it)
+* \return       TRUE if the operand is a valid immed value (integer within 16 bit limits)
+*******************************************************************************/
 int check_immed(char *line) {
     long value;
     char *ptr = line;
@@ -194,6 +324,16 @@ int check_immed(char *line) {
     return TRUE;
 }
 
+/******************************************************************************
+* Function : order_structure(char *line)
+*//**
+* \section Description: this function checks if the structure of the order line is ok
+*          there are a lot of different structures for different orders, so this function
+*          is used to take any order line and check its operands
+*
+* \param  		line - the current line(or part of it)
+* \return       TRUE if the structure of the order line is ok
+*******************************************************************************/
 int order_structure(char *line) {
     char *ptr = line;
     unsigned oc;
@@ -334,6 +474,18 @@ int order_structure(char *line) {
     return FALSE;
 }
 
+/******************************************************************************
+* Function : register_num(char *line)
+*//**
+* \section Description: this function checks if the current operand is a valid register
+*                       (a '$' followed by an integer between 0 and 31). the assembler
+*                       calls this function only when it identifies that there should
+*                       register in the current position of line, so if the result of
+*                       this function is negative, the assembler will report an error
+*
+* \param  		line - the current line(or part of it)
+* \return       TRUE if the current operand is a valid register
+*******************************************************************************/
 int register_num(char *line, int err) {
     char *ptr = line;
     int reg;
@@ -362,7 +514,15 @@ int register_num(char *line, int err) {
     return reg;
 }
 
-char* scan_op(char *line, char *op) {
+/******************************************************************************
+* Function : scan_op(char *line)
+*//**
+* \section Description: this function scans the next field in the current line into op
+*
+* \param  		line - the current line(or part of it)
+* \param        op - the operand we write into. has to have allocated memory to it before
+*******************************************************************************/
+void scan_op(char *line, char *op) {
     char *ptr = line;
     int i=0;
     while (spaceln(*ptr))
@@ -372,11 +532,20 @@ char* scan_op(char *line, char *op) {
         i++;
     }
     op[i] = '\0';
-    return op;
 }
 
-/*TODO: check for errors in next_op every time I traverse*/
-/*points directly at operand. works without errors like the reg*/
+/******************************************************************************
+* Function : next_op(char *line)
+*//**
+* \section Description: this function checks the distance between the current line position
+*                       and the next field. if a comma should separate fields and there is no comma,
+*                       the assembler will report an error.
+*
+* \param  		line - the current line(or part of it)
+* \param        comma - flag that indicates if a comma should separate this field from the next one
+* \return       -1 if error occurs. otherwise, the distance between the current line position
+*               and the next field
+*******************************************************************************/
 int next_op(char *line, int comma) {
     char *ptr = line;
     int distance = 0;
@@ -386,8 +555,8 @@ int next_op(char *line, int comma) {
     ptr+=strlen(op);
     distance+=strlen(op);
     while(spaceln(*ptr)) {
-     ptr++;
-     distance++;
+        ptr++;
+        distance++;
     }
     if(!comma) {
         free(op);
@@ -408,7 +577,16 @@ int next_op(char *line, int comma) {
     return distance;
 }
 
-/*points after optional label*/
+/******************************************************************************
+* Function : compatible_args(char *line)
+*//**
+* \section Description: this function checks if the structure of the data directive line given is ok.
+*                       called only if the current line is a data directive. if not, it will
+*                       report an error according to the error in the line.
+*
+* \param  		line - the current line(or part of it)
+* \return       TRUE if the structure of the data directive line given is ok
+*******************************************************************************/
 int compatible_args(char *line) {
     char *directive_name;
     char *ptr = line;
@@ -439,41 +617,50 @@ int compatible_args(char *line) {
         case DB:
             directive_name = ".db";
             break;
-        case DH:
-            directive_name = ".dh";
-            break;
-        case DW:
-            directive_name = ".dw";
-            break;
-        default:
-            fprintf(stderr,"this should not happen [compatible_args switch]");
+            case DH:
+                directive_name = ".dh";
+                break;
+                case DW:
+                    directive_name = ".dw";
+                    break;
+                    default:
+                        fprintf(stderr,"this should not happen [compatible_args switch]");
+                        return FALSE;
     }
     if(intlen(ptr) == 0) {
         fprintf(stderr,"%s only works with integers ",directive_name);
         return FALSE;
     }
     for(i=1; i < num_args; i++) {
-            if (next_op(ptr, TRUE) == -1)
-                return FALSE;
-            ptr += next_op(ptr, TRUE);
-            if(intlen(ptr) == 0) {
-                fprintf(stderr,"%s only works with integers ",directive_name);
-                return FALSE;
-            }
-            if(intlen(ptr) == 0)
-                return FALSE;
+        if (next_op(ptr, TRUE) == -1)
+            return FALSE;
+        ptr += next_op(ptr, TRUE);
+        if(intlen(ptr) == 0) {
+            fprintf(stderr,"%s only works with integers ",directive_name);
+            return FALSE;
+        }
+        if(intlen(ptr) == 0)
+            return FALSE;
     }
     return TRUE;
 }
-/*this func gets a pointer to the line after the ".asciz" directive, and counts how many characters are requested to save (not including the NULL char at the end)
- * this func will only be used if the directive is valid*/
+
+/******************************************************************************
+* Function : asciz_len(char *line)
+*//**
+* \section Description: this function checks the length of the string in the asciz directive.
+*                       called only when the assembler identifies an asciz directive without any errors.
+*
+* \param  		line - the current line(after ".asciz")
+* \return       the length of the string in the asciz directive
+*******************************************************************************/
 int asciz_len(char *line) {
     char *ptr;
     int length = 0;
     ptr = (char*) malloc (MAX_LINE+1);
     alloc_check(ptr);
     strcpy(ptr,line);
-    ptr++; /*skipping '\"'*/
+    ptr++; /*skipping opening '\"'*/
     while(!empty(ptr)) {
         ptr++;
         length++;
@@ -481,7 +668,15 @@ int asciz_len(char *line) {
     length--; /*subtracting the closing '\"'*/
     return length;
 }
-/*points after optional label and directive*/
+
+/******************************************************************************
+* Function : get_num_args(char *line)
+*//**
+* \section Description: this checks how many arguments are in this .db,.dh or .dw directive line
+*
+* \param  		line - the current line(after the directive identifier)
+* \return       the number of arguments that are in this .db,.dh or .dw directive line
+*******************************************************************************/
 int get_num_args(char *line) {
     char *ptr = line;
     int num_args = 1;
@@ -505,3 +700,4 @@ int get_num_args(char *line) {
     }
     return num_args;
 }
+/*************** END OF FUNCTIONS ***************************************************************************/
