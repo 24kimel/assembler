@@ -115,8 +115,8 @@ int intlen(char *line) {
         ptr++;
         i++;
     }
-    while(!isspace(*ptr) && *ptr != ',') {
-        if(!isdigit(*ptr)) return i;
+    while(!isspace((int)*ptr) && *ptr != ',') {
+        if(!isdigit((int)*ptr)) return i;
         ptr++;
         i++;
     }
@@ -157,7 +157,7 @@ int start_label(char *line) {
     word = (char*) malloc (sizeof(char) * MAX_LINE+1);
     alloc_check(word);
     /*scanning the 1st field into word*/
-    while(!isspace(line[i])) {
+    while(!isspace((int)line[i])) {
         word[i] = line[i];
         i++;
     }
@@ -195,14 +195,14 @@ int start_label(char *line) {
 int is_label(char *line, int err) {
     char *ptr = line;
     int i = 0;
-    if(!isalpha(ptr[0])) {
+    if(!isalpha((int)ptr[0])) {
         if(err == TRUE)
             fprintf(stderr, "error: a label should start with a letter ");
         return FALSE;
     }
 
-    while(!isspace(ptr[i]) && ptr[i] != '\0' && !endline(ptr[i])) {
-        if(!isalnum(ptr[i]) && !endline(ptr[i])) {
+    while(!isspace((int)ptr[i]) && ptr[i] != '\0' && !endline(ptr[i])) {
+        if(!isalnum((int)ptr[i]) && !endline(ptr[i])) {
             if(err == TRUE)
                 fprintf(stderr,"error: label contains illegal characters. a proper label should contain only alphanumeric characters ");
             return FALSE;
@@ -229,7 +229,7 @@ int is_label(char *line, int err) {
 void scan_label (char *line, char *label) {
     int i;
     i=0;
-    while(!isspace(line[i]) && line[i]!=':') {
+    while(!isspace((int)line[i]) && line[i]!=':') {
         label[i] = line[i];
         i++;
     }
@@ -249,7 +249,7 @@ int is_data(char *line) {
     int retval = 0;
     char *word = (char*) malloc(sizeof(char) * (MAX_LINE+1));
     alloc_check(word);
-    while(!isspace(line[i])) {
+    while(!isspace((int)line[i])) {
         word[i] = line[i];
         i++;
     }
@@ -278,7 +278,7 @@ int ent_ext(char *line) {
     int i = 0;
     char *word = (char*) malloc(sizeof(char) * (MAX_LINE+1));
     alloc_check(word);
-    while(!isspace(line[i])) {
+    while(!isspace((int)line[i])) {
         word[i] = line[i];
         i++;
     }
@@ -417,7 +417,7 @@ int order_structure(char *line) {
         }
         if(!is_label(ptr,TRUE))
             return FALSE;
-        while(isalpha(*ptr) || isdigit(*ptr)) ptr++;
+        while(isalpha((int)*ptr) || isdigit((int)*ptr)) ptr++;
         if(empty(ptr))
             return TRUE;
         else {
@@ -437,7 +437,7 @@ int order_structure(char *line) {
         else result = 2;
 
         if(result == 1) {
-            while(isalpha(*ptr) || isdigit(*ptr)) ptr++;
+            while(isalpha((int)*ptr) || isdigit((int)*ptr)) ptr++;
         }
         else {
             ptr++;
@@ -453,7 +453,7 @@ int order_structure(char *line) {
     if(oc <= 32) {
         if(is_label(ptr,1) == FALSE)
             return FALSE;
-        while(isalpha(*ptr) || isdigit(*ptr))
+        while(isalpha((int)*ptr) || isdigit((int)*ptr))
             ptr++;
         if(empty(ptr))
             return TRUE;
@@ -497,7 +497,7 @@ int register_num(char *line, int err) {
             fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31)");
         return -1;
     }
-    if(!isdigit(*(++ptr))) {
+    if(!isdigit((int)*(++ptr))) {
         if(err == TRUE)
             fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31)");
         return -1;
