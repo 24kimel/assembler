@@ -2,7 +2,7 @@
 * Title                 :   Main Program
 * Filename              :   main.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.1
+* Version               :   1.4.2
 *******************************************************************************/
 /** \file main.c
  * \brief This module contains the main function of the assembler
