@@ -22,7 +22,7 @@ void pass_two_error(char* filename,unsigned long num_ln) {
     err2 = TRUE;
     fprintf(stderr,"[%s | %lu]\n",filename,num_ln);
 }
-int pass_two(char *filename) {
+void pass_two(char *filename) {
     FILE *curr_file;
     unsigned long num_ln =0;
     char *line;
@@ -37,7 +37,7 @@ int pass_two(char *filename) {
     alloc_check(curr_file);
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
         fprintf(stderr,"error trying to pass on the file %s\n", filename);
-        return 1;
+        return;
     }
     line = (char*) malloc (sizeof(char) * MAX_LINE+1);
     alloc_check(line);
@@ -78,8 +78,9 @@ int pass_two(char *filename) {
         } else {
             /*steps 7 and 8*/
             opcode = get_opcode(pos);
+            /*conditional branch orders*/
             if(opcode>=15 && opcode<=18) {
-                /*find the label that shows up here*/
+                /*find the label that shows up here. skipping to the 3rd operand*/
                 pos += next_op(pos,0);
                 for(i = 0; i < 2; i++)
                     pos += next_op(pos,1);
@@ -87,12 +88,13 @@ int pass_two(char *filename) {
                 order_type = 'I';
             } else {
                 if(opcode>=30 && opcode <=32) {
-                    /*find the label that shows up here*/
+                    /*find the label that shows up here skipping to the 1st operand*/
                     pos += next_op(pos,0);
                     scan_label(pos, label);
                     order_type = 'J';
                 }
             }
+
             if ((opcode>=15 && opcode<=18) || (opcode>=30 && opcode <=32)) {
                 if (complete_missing_info(label, order_type, IC) == 0)
                     pass_two_error(filename,num_ln);
@@ -106,7 +108,5 @@ int pass_two(char *filename) {
     if(err2 == FALSE) {
         /*step 10*/
         output(filename);
-        return 0;
     }
-    return err2;
 }

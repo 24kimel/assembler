@@ -161,3 +161,15 @@ char* filename(char* name){
     name = strncpy(name,name,strlen(name)-3);
     return name;
 }
+
+int num_files (int argc) {
+    if(argc<MIN_ARGUMENTS) {
+        fprintf(stderr,"error: no input files");
+        return FALSE;
+    }
+    if(argc>MAX_ARGUMENTS) {
+        fprintf(stderr,"error: too much input files(more than 3)");
+        return FALSE;
+    }
+    return TRUE;
+}

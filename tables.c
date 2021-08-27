@@ -19,8 +19,6 @@ command_image *code_img;
 data_image *data_img;
 symbol_node *symbol_table;
 ext_node *external_list;
-/*TODO: initialize the tables to NULL every file*/
-
 
 unsigned get_opcode(char *line) {
     return opcode_table[order_index(line)].opcode;
@@ -141,11 +139,10 @@ void cmd_to_info(char *line, unsigned IC) {
     code_img[code_img_length-1] = img;
 }
 
-int build_code_img() {
+void build_code_img() {
     code_img_length = 0;
     code_img = (command_image*) malloc(sizeof(command_image));
     alloc_check(code_img);
-    return TRUE;
 }
 /*data image:*/
 
@@ -252,13 +249,12 @@ int build_data_img() {
 
 int entries_exist;
 
-int create_symbol(symbol_node *dest,unsigned address, char *symbol, int attribute, int is_entry) {
+void create_symbol(symbol_node *dest,unsigned address, char *symbol, int attribute, int is_entry) {
     dest->next = NULL;
     dest->address = address;
     dest->attribute = attribute;
     strcpy(dest->symbol, symbol);
     dest->is_entry = is_entry;
-    return TRUE;
 }
 
 /*this func adds the symbol represented by the parameters given to the symbol table. returns FALSE if error occurs, TRUE
@@ -308,7 +304,7 @@ int add_ent(char *symbol){
         }
         curr = curr->next;
     }
-    fprintf(stderr,"error: the symbol requested does not exist ");
+    fprintf(stderr,"error: the symbol requested as an entry point does not exist ");
     return FALSE;
 }
 
@@ -354,10 +350,19 @@ void build_tables() {
     build_data_img();
 }
 
+/*this func completes all the missing info about certain I and J orders, where labels can show as operands
+ * and the assembler does not know their address when passing on the file for the 1st time*/
 int complete_missing_info(char *label, char order_type, unsigned IC) {
     unsigned long address;
     int i;
     symbol_node *curr = symbol_table;
+    if(order_type == 'J') {
+        for(i = 0; i < code_img_length; i++) {
+            /*no info need to be completed. a register has already been coded into the binary image:*/
+            if(IC == code_img[i].address && code_img[i].machine_code.j_cmd.reg == TRUE)
+                return TRUE;
+        }
+    }
     while(curr!=NULL) {
         if(strcmp(label,curr->symbol) == 0) {
             address = curr->address;
@@ -365,8 +370,8 @@ int complete_missing_info(char *label, char order_type, unsigned IC) {
         }
         curr = curr->next;
     }
-    if(symbol_table == NULL) {
-        fprintf(stderr,"error: label does not exist ");
+    if(curr == NULL) {
+        fprintf(stderr,"error: label used as operand does not exist ");
         return FALSE;
     }
     /*pass on the symbol table.*/
@@ -376,7 +381,7 @@ int complete_missing_info(char *label, char order_type, unsigned IC) {
             return FALSE;
         }
         if(address == 0) {
-            fprintf(stderr,"error: external symbol cannot be used in this type of orders");
+            fprintf(stderr,"error: external symbol cannot be used in conditional branch orders ");
             return FALSE;
         }
         for(i = 0; i < code_img_length; i++) {
@@ -433,4 +438,5 @@ void initialize_tables(){
     symbol_table = NULL;
     external_list = NULL;
     entries_exist = FALSE;
+    data_exists = FALSE;
 }

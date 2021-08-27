@@ -2,8 +2,7 @@
 #include "assembler.h"
 #include <stdlib.h>
 /*TODO:
- * debug
- * document*/
+ * document */
 
 void alloc_check(void * x) {
     if(x == NULL) {
@@ -12,17 +11,7 @@ void alloc_check(void * x) {
     }
 }
 
-int num_files (int argc) {
-    if(argc<MIN_ARGUMENTS) {
-        fprintf(stderr,"error: no input files");
-        return FALSE;
-    }
-    if(argc>MAX_ARGUMENTS) {
-        fprintf(stderr,"error: too much input files(more than 3)");
-        return FALSE;
-    }
-    return TRUE;
-}
+
 
 int main(int argc, char **argv) {
     int i;
@@ -31,10 +20,8 @@ int main(int argc, char **argv) {
     for(i = 1; i< argc; i++) {
         if ((curr_file = filename(argv[i])) != NULL) {
             if (pass_one(curr_file) == 0) {
-                if(pass_two(curr_file) == 0)
-                    continue;
+                pass_two(curr_file);
             }
-            return 1;
         }
     }
     return 0;

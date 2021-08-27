@@ -55,7 +55,6 @@ int pass_one(char *filename) {
     /*step 1:*/
     IC = 100;
     DC = 0;
-    data_exists = FALSE;
     initialize_tables();
     build_tables();
     if((curr_file=fopen(filename,"r"))==NULL) {
@@ -70,8 +69,7 @@ int pass_one(char *filename) {
     }
     line = (char*) malloc(sizeof(char)*(MAX_LINE + 1));
     alloc_check(line);
-    pos = line;
-    label = (char*) malloc(sizeof(char)*(MAX_LABEL + 1));
+    label = (char*) malloc(sizeof(char)*(MAX_LINE+1));
     alloc_check(label);
 
     while(TRUE){
@@ -131,27 +129,34 @@ int pass_one(char *filename) {
                     } else {
                         scan_label(pos, label);
                         pos+=strlen(label);
-                    if(add_symbol(0, label, EXTERNAL,FALSE) == FALSE)
+                        if(!empty(pos)) {
+                            fprintf(stderr,"too much operands for .extern ");
                             pass_one_error(filename,num_ln);
+                        }
+
+                        if (err_ln == FALSE) {
+                            if (add_symbol(0, label, EXTERNAL, FALSE) == FALSE)
+                                pass_one_error(filename, num_ln);
+                        }
                     }
                 }
-            } else {
-                /*step 12:*/
-                if(label_flag == TRUE) {
-                    if(add_symbol(IC, label, CODE,FALSE) == FALSE)
-                        pass_one_error(filename,num_ln);
+                } else {
+                    /*step 12:*/
+                    if(label_flag == TRUE) {
+                        if(add_symbol(IC, label, CODE,FALSE) == FALSE)
+                            pass_one_error(filename,num_ln);
+                    }
+                    /*steps 13 and 14:*/
+                    if(err_ln == FALSE) {
+                        if(order_structure(pos) == FALSE)
+                            pass_one_error(filename,num_ln);
+                    }
+                    /*step 15:*/
+                    if(err_ln == FALSE) {
+                        cmd_to_info(pos,IC);
+                    }
+                    IC+=4; /*step 16*/
                 }
-                /*steps 13 and 14:*/
-                if(err_ln == FALSE) {
-                    if(order_structure(pos) == FALSE)
-                        pass_one_error(filename,num_ln);
-                }
-                /*step 15:*/
-                if(err_ln == FALSE) {
-                    cmd_to_info(pos,IC);
-                }
-                IC+=4; /*step 16*/
-            }
         }
     }
     /*step 17:*/

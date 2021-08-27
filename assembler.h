@@ -51,8 +51,8 @@ int compatible_args(char *line);
 int get_num_args(char *line);
 
 /*the two assembler passes:*/
-int pass_one(char *);
-int pass_two(char *);
+int pass_one(char *filename);
+void pass_two(char *filename);
 
 /*add the name of the current file to the error print:*/
 #define add_err_detail(NAME,LINE)   fprintf(stderr,"[file: %s. line: %lu]",NAME,LINE)
@@ -67,13 +67,17 @@ enum COMMAND_TYPES {
     J_CMD = 3
 };
 
-enum DIRECTIVES{
+enum DATA_DIRECTIVES{
     DB = 1,
     DH = 2,
     ASCIZ = 3,
     DW = 4
 };
 
+enum LABEL_DIRECTIVES{
+    ENTRY = 1,
+    EXTERN = 2
+};
 
 /*symbol table:*/
 typedef struct symbol{
@@ -97,7 +101,7 @@ void deallocate_symbol_table();
 
 char* filename(char* name);
 void output(char *filename);
-
+int num_files (int argc);
 
 typedef struct line_in_binary{
     unsigned b1:8;

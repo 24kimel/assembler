@@ -104,7 +104,7 @@ int is_label(char *line, int err) {
         return FALSE;
     }
 
-    while(!isspace(ptr[i]) && ptr[i] != '\0') {
+    while(!isspace(ptr[i]) && ptr[i] != '\0' && !endline(ptr[i])) {
         if(!isalnum(ptr[i]) && !endline(ptr[i])) {
             if(err == TRUE)
                 fprintf(stderr,"error: label contains illegal characters. a proper label should contain only alphanumeric characters ");
@@ -112,7 +112,7 @@ int is_label(char *line, int err) {
         }
         i++;
     }
-    if(strlen(ptr)>MAX_LABEL) {
+    if(i>MAX_LABEL) {
         fprintf(stderr,"error: label length above 31 characters ");
         return FALSE;
     }
@@ -311,7 +311,8 @@ int order_structure(char *line) {
     if(oc <= 32) {
         if(is_label(ptr,1) == FALSE)
             return FALSE;
-        while(isalpha(*ptr) || isdigit(*ptr)) ptr++;
+        while(isalpha(*ptr) || isdigit(*ptr))
+            ptr++;
         if(empty(ptr))
             return TRUE;
         else {
@@ -339,12 +340,12 @@ int register_num(char *line, int err) {
 
     if(*ptr != '$') {
         if(err == TRUE)
-            fprintf(stderr, "error: a register should be here (a register starts with a $, followed by a number between 0 and 31)");
+            fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31)");
         return -1;
     }
     if(!isdigit(*(++ptr))) {
         if(err == TRUE)
-            fprintf(stderr, "error: a register should be here (a register starts with a $, followed by a number between 0 and 31)");
+            fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31)");
         return -1;
     }
     reg = atoi(ptr);
@@ -418,7 +419,7 @@ int compatible_args(char *line) {
     if(d == ASCIZ) { /*.asciz*/
         while(spaceln(*ptr)) ptr++;
         if(*ptr!='\"') {
-            fprintf(stderr,".asciz directive should contain a string in double quotation marks");
+            fprintf(stderr,".asciz directive should contain a string in double quotation marks ");
             return FALSE;
         }
         ptr++; /*skipping the opening '\"'*/
