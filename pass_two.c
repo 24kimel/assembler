@@ -1,8 +1,51 @@
+/*******************************************************************************
+* Title                 :   The Second Assembler Pass
+* Filename              :   pass_two.c
+* Author                :   Itai Kimelman
+* Version               :   1.3.0
+*******************************************************************************/
+/** \file pass_two.c
+ * \brief This module performs the 2nd assembler pass
+ */
+/******************************************************************************
+* Includes
+*******************************************************************************/
 #include <stdio.h>
 #include "assembler.h"
 #include <stdlib.h>
 #include <string.h>
-/*
+
+/******************************************************************************
+* Module Variable Definitions
+*******************************************************************************/
+int err2;
+
+/******************************************************************************
+* Function Definitions
+*******************************************************************************/
+/******************************************************************************
+* Function : pass_two_error(char *filename, unsigned long num_ln)
+*//**
+* \section Description Description: this function is used when an error in input occurs during the 2nd pass.
+*                       it turns on the err2 flag, and prints out the name of the file and line number,
+*                       so the user will know where the error was found.
+*
+* \param  		filename - the name of the current file
+* \param        num_ln - the number of the current line
+*
+*******************************************************************************/
+void pass_two_error(char* filename,unsigned long num_ln) {
+    err2 = TRUE;
+    fprintf(stderr,"[%s | %lu]\n",filename,num_ln);
+}
+
+/******************************************************************************
+* Function : pass_two(char *filename)
+*//**
+* \section Description: this function performs the 2nd assembler pass on the current file.
+*                       it follows the algorithm mentioned below.
+* \param  		filename - the name of the current file
+* \note
  * the algorithm for the 2nd assembler pass is as follows:
  * 1. read the next line. if the file has ended : go to step 9.
  * 2. if this line is a comment line or an empty line, go to step 1.
@@ -14,14 +57,8 @@
  * 7. this is an order line. if there is missing info about the order, code it now (if error occurs, report it).go to step 1.
  * 8. if in step 7 (only in type J order), there was an external label, add the label's name to the external label list for later use
  * 9. we have reached the end of the source file. If there were errors, do not build the output files.
- * 10. OUTPUT FILES LES GO*/
-/*those are really easy to do*/
-
-int err2;
-void pass_two_error(char* filename,unsigned long num_ln) {
-    err2 = TRUE;
-    fprintf(stderr,"[%s | %lu]\n",filename,num_ln);
-}
+ * 10.  MAKE THE OUTPUT FILES
+*******************************************************************************/
 void pass_two(char *filename) {
     FILE *curr_file;
     unsigned long num_ln =0;
@@ -110,3 +147,5 @@ void pass_two(char *filename) {
         output(filename);
     }
 }
+
+/*************** END OF FUNCTIONS ***************************************************************************/

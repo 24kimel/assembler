@@ -1,7 +1,27 @@
+/*******************************************************************************
+* Title                 :   Output files management
+* Filename              :   files.c
+* Author                :   Itai Kimelman
+* Version               :   1.3.0
+*******************************************************************************/
+/** \file files.c
+ * \brief If there are no errors in the 1st and 2nd pass on
+ * this current file, files.c will create all the output files needed
+ * 1. a .ob file - for the code and data image
+ * 2. an .ent file - for all the labels that are entry points (if there are any)
+ * 3. an .ext file - for all the external labels used as operands (if there are any)
+ */
+/******************************************************************************
+* Includes
+*******************************************************************************/
 #include <stdio.h>
 #include "assembler.h"
 #include <string.h>
 #include <stdlib.h>
+
+/******************************************************************************
+* Module Variable Definitions
+*******************************************************************************/
 extern symbol_node *symbol_table;
 extern ext_node *external_list;
 extern command_image *code_img;
@@ -10,13 +30,69 @@ extern long unsigned int ICF,DCF;
 extern unsigned long code_img_length;
 extern unsigned long data_img_length;
 extern int data_exists,entries_exist;
-/*the assembler makes 3 output files for each file opened: the first one is an object file
- * contains the binary image of the code/data of the input file.
- * the second one is an entry file, which contains all the symbols that were declared as an entry.
- * the third one is an external file, which contains all the symbols that were declared as external*/
 
-/*this func checks if we have printed 4 bytes into a line of the .ob file.
- * if we did so (if there are 4 spaces), the func will open a new line, and print the current address*/
+/******************************************************************************
+* Function Definitions
+*******************************************************************************/
+/******************************************************************************
+* Function : filename(char*)
+*//**
+* \section Description: This function checks if the file given is
+*                       an assembly file. if not - it prints an error
+*
+*  This function is used to check dor the file format before opening it
+*
+* \param  		name - the name of the file
+*
+* \return 		the name of the file without .as (if it is a .as file). NULL if error occurs
+*******************************************************************************/
+char* filename(char* name){
+    if(strcmp(name+strlen(name)-3,".as")!=0) {
+        fprintf(stderr,"error: non-compatible file format. all input files should be assembly files (file: %s)",name);
+        return NULL;
+    }
+    name = strncpy(name,name,strlen(name)-3);
+    return name;
+}
+
+/******************************************************************************
+* Function : num_files(int argc)
+*//**
+* \section Description: This function checks for the number of arguments and makes sure
+*                       it is not below 2 or over 4. otherwise, ut prints an error
+*
+*  The assembler works with 1-3 files of input - hence argc should be between 2 and 4.
+*  This function is used to make sure that there is at least 1 input file, and at most 3
+*
+* \param  		argc - the number of arguments in the command line
+*
+* \return 		TRUE if there is at least 1 input file, and at most 3. FALSE if not
+*******************************************************************************/
+int num_files (int argc) {
+    if(argc<MIN_ARGUMENTS) {
+        fprintf(stderr,"error: no input files");
+        return FALSE;
+    }
+    if(argc>MAX_ARGUMENTS) {
+        fprintf(stderr,"error: too much input files(more than 3)");
+        return FALSE;
+    }
+    return TRUE;
+}
+
+/******************************************************************************
+* Function : new_line_check(int *space_count,unsigned long *address, FILE *ob_file);
+*//**
+* \section Description: this function checks if we have printed 4 bytes into the object file.
+*                       if we did, it will create a newline and print the current address of the data.
+*                       this function is only used when printing data because we may print a number of bytes
+*                       that is not divisible by 4.
+*
+* \param  		space_count - the number of spaces in the line(if there is 4, a newline is needed)
+* \param        address - the current address of the data.
+* \param        ob_file - pointer to output object file (see \brief)
+*
+*******************************************************************************/
 void new_line_check(int *space_count,unsigned long *address, FILE *ob_file) {
     if(*space_count == 4) {
         /*new line*/
@@ -25,8 +101,15 @@ void new_line_check(int *space_count,unsigned long *address, FILE *ob_file) {
         *address+=4;
     }
 }
-
-/*this func creates the output files. will always create .ob file, and will create .ent and .ext files if required*/
+/******************************************************************************
+* Function : output(char *filename)
+*//**
+* \section Description: creates output files (see \brief)
+*
+* \param  		argc - the number of arguments in the command line
+*
+* \return 		TRUE if there is at least 1 input file, and at most 3. FALSE if not
+*******************************************************************************/
 void output(char *filename) {
     FILE *ob_file;
     FILE *ent_file;
@@ -148,25 +231,4 @@ void output(char *filename) {
     free(ent_fname);
     free(ext_fname);
 }
-
-
-char* filename(char* name){
-    if(strcmp(name+strlen(name)-3,".as")!=0) {
-        fprintf(stderr,"error: non-compatible file format. all input files should be assembly files (file: %s)",name);
-        return NULL;
-    }
-    name = strncpy(name,name,strlen(name)-3);
-    return name;
-}
-
-int num_files (int argc) {
-    if(argc<MIN_ARGUMENTS) {
-        fprintf(stderr,"error: no input files");
-        return FALSE;
-    }
-    if(argc>MAX_ARGUMENTS) {
-        fprintf(stderr,"error: too much input files(more than 3)");
-        return FALSE;
-    }
-    return TRUE;
-}
+/*************** END OF FUNCTIONS ***************************************************************************/
