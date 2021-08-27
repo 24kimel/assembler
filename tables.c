@@ -2,7 +2,7 @@
 * Title                 :   Table Initialization, Build and Maintenance
 * Filename              :   tables.c
 * Author                :   Itai Kimelman
-* Version               :   1.3.1
+* Version               :   1.4.0
 *******************************************************************************/
 /** \file tables.c
  * \brief This module contains function that maintain all the tables necessary to the assembler
@@ -174,41 +174,41 @@ void cmd_to_info(char *line, unsigned IC) {
             r_cmd.zeros = 0;
             printable.r_cmd = r_cmd;
             break;
-            case I_CMD:
-                i_cmd.opcode = opcode;
-                if(opcode <= 14 || (opcode>=19 && opcode<=24)) {
-                    can_code_immed = TRUE;
-                } else can_code_immed = FALSE;
-                regs[0] = atoi(++line);
-                for(i=1;i<3;i++) {
-                    line+= next_op(line,TRUE);
-                    if(can_code_immed && i==1) {
-                        i_cmd.immed=atoi(line);
-                    } else regs[i] = atoi(++line);
+        case I_CMD:
+            i_cmd.opcode = opcode;
+            if(opcode <= 14 || (opcode>=19 && opcode<=24)) {
+                can_code_immed = TRUE;
+            } else can_code_immed = FALSE;
+            regs[0] = atoi(++line);
+            for(i=1;i<3;i++) {
+                line+= next_op(line,TRUE);
+                if(can_code_immed && i==1) {
+                    i_cmd.immed=atoi(line);
+                } else regs[i] = atoi(++line);
+            }
+            /*happens if the command is an arithmetic or a load/save command:*/
+            if(regs[2]!=0) regs[1] = regs[2];
+            i_cmd.rs = regs[0];
+            i_cmd.rt = regs[1];
+            printable.i_cmd = i_cmd;
+            break;
+        case J_CMD:
+            j_cmd.opcode = opcode;
+            if(opcode <= 32) {
+                if(*line != '$') {
+                    j_cmd.reg = FALSE;
+                } else {
+                    j_cmd.reg = 1;
+                    j_cmd.address = (unsigned)atoi(++line);
                 }
-                /*happens if the command is an arithmetic or a load/save command:*/
-                if(regs[2]!=0) regs[1] = regs[2];
-                i_cmd.rs = regs[0];
-                i_cmd.rt = regs[1];
-                printable.i_cmd = i_cmd;
-                break;
-                case J_CMD:
-                    j_cmd.opcode = opcode;
-                    if(opcode <= 32) {
-                        if(*line != '$') {
-                            j_cmd.reg = FALSE;
-                        } else {
-                            j_cmd.reg = 1;
-                            j_cmd.address = (unsigned)atoi(++line);
-                        }
 
-                    }
-                    else {
-                        j_cmd.reg = FALSE;
-                        j_cmd.address = 0;
-                    }
-                    printable.j_cmd = j_cmd;
-                    break;
+            }
+            else {
+                j_cmd.reg = FALSE;
+                j_cmd.address = 0;
+            }
+            printable.j_cmd = j_cmd;
+            break;
     }
     img.address = IC;
     img.machine_code = printable;
@@ -339,44 +339,44 @@ void data_to_info(char *line) {
                 DC+=1;
             }
             break;
-            case DH:
-                data_img[pos].machine_code.dh.img = atoi(line);
-                data_img[pos].address=DC;
-                data_img[pos].bytes_taken = 2;
+        case DH:
+            data_img[pos].machine_code.dh.img = atoi(line);
+            data_img[pos].address=DC;
+            data_img[pos].bytes_taken = 2;
+            DC+=2;
+            for(i=1;i< num_args;i++) {
+                line+=next_op(line,TRUE);
+                data_img[pos+i].machine_code.dh.img = atoi(line);
+                data_img[pos+i].address=DC;
+                data_img[pos+i].bytes_taken = 2;
                 DC+=2;
-                for(i=1;i< num_args;i++) {
-                    line+=next_op(line,TRUE);
-                    data_img[pos+i].machine_code.dh.img = atoi(line);
-                    data_img[pos+i].address=DC;
-                    data_img[pos+i].bytes_taken = 2;
-                    DC+=2;
-                }
-                break;
-                case ASCIZ:
-                    line++; /*skipping the opening '\"'*/
-                    for(i=0;i<len;i++) { /*encoding all the chars of the directive*/
-                        byte = (unsigned)(line[i]);
-                        data_img[pos+i].machine_code.b = byte;
-                        data_img[pos+i].address = DC++;
-                        data_img[pos+i].bytes_taken = 1;
-                    }/*adding the null character*/
-                    data_img[pos+i].machine_code.b = 0;
-                    data_img[pos+i].address = DC++;
-                    data_img[pos+i].bytes_taken = 1;
-                    break;
-                    case DW:
-                        data_img[pos].machine_code.dw.img = atol(line);
-                        data_img[pos].address=DC;
-                        data_img[pos].bytes_taken = 4;
-                        DC+=4;
-                        for(i=1;i< num_args;i++) {
-                            line+=next_op(line,TRUE);
-                            data_img[pos+i].machine_code.dw.img = atol(line);
-                            data_img[pos+i].address=DC;
-                            data_img[pos+i].bytes_taken = 4;
-                            DC+=4;
-                        }
-                        break;
+            }
+            break;
+        case ASCIZ:
+            line++; /*skipping the opening '\"'*/
+            for(i=0;i<len;i++) { /*encoding all the chars of the directive*/
+                byte = (unsigned)(line[i]);
+                data_img[pos+i].machine_code.b = byte;
+                data_img[pos+i].address = DC++;
+                data_img[pos+i].bytes_taken = 1;
+            }/*adding the null character*/
+            data_img[pos+i].machine_code.b = 0;
+            data_img[pos+i].address = DC++;
+            data_img[pos+i].bytes_taken = 1;
+            break;
+        case DW:
+            data_img[pos].machine_code.dw.img = atol(line);
+            data_img[pos].address=DC;
+            data_img[pos].bytes_taken = 4;
+            DC+=4;
+            for(i=1;i< num_args;i++) {
+                line+=next_op(line,TRUE);
+                data_img[pos+i].machine_code.dw.img = atol(line);
+                data_img[pos+i].address=DC;
+                data_img[pos+i].bytes_taken = 4;
+                DC+=4;
+            }
+            break;
     }
 }
 

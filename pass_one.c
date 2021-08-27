@@ -2,7 +2,7 @@
 * Title                 :   The First Assembler Pass
 * Filename              :   pass_one.c
 * Author                :   Itai Kimelman
-* Version               :   1.3.1
+* Version               :   1.4.0
 *******************************************************************************/
 /** \file pass_one.c
  * \brief This module performs the 1st assembler pass
@@ -55,7 +55,7 @@ void pass_one_error(char* filename,unsigned long num_ln) {
 * \section Description: this function performs the 1st assembler pass on the current file.
 *                       it follows the algorithm mentioned below.
 * \param  		filename - the name of the current file
-* \return       0 if no error was found. otherwise - 1
+* \return       0 if no error was found. otherwise:  1
 * \note
  * the algorithm for the 1st assembler pass is as follows:
  * 1. initialize IC = 100, DC = 0
@@ -82,7 +82,7 @@ void pass_one_error(char* filename,unsigned long num_ln) {
  * 18. save the final value of IC,DC into ICF,DCF accordingly. they will be used to build the output files
  * 19. update the value of every symbol with attribute data by adding ICF to its value
  * 20. update the data image table by adding ICF to each value
- * 21. return 0 to main (begin the 2nd assembler pass)
+ * 21. return FALSE to main (begin the 2nd assembler pass) (no error was found)
 *******************************************************************************/
 int pass_one(char *filename) {
     unsigned long num_ln = 0;

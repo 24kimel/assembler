@@ -2,7 +2,7 @@
 * Title                 :   Output files management
 * Filename              :   files.c
 * Author                :   Itai Kimelman
-* Version               :   1.3.1
+* Version               :   1.4.0
 *******************************************************************************/
 /** \file files.c
  * \brief If there are no errors in the 1st and 2nd pass on
@@ -122,6 +122,7 @@ void output(char *filename) {
     int space_count = 0;
     unsigned long curr_address;
 
+    /*making all the needed file names*/
     symbol_node *curr_1 = symbol_table;
     ext_node *curr_2 = external_list;
     alloc_check(ob_fname);
@@ -179,6 +180,7 @@ void output(char *filename) {
      * then for each line in the binary image, the binary image is printed in the little endian method in hex base.
      * to the left of the image, the address for that image is shown*/
     /*to code it this way we need to do a loop in the loop for data*/
+    /*using the partition to bytes made by the unions and structs*/
     fprintf(ob_file,"     %lu %lu\n",ICF-100,DCF);
     for(i=0;i<code_img_length;i++) {
         fprintf(ob_file,"%04d %02X %02X %02X %02X\n", code_img[i].address, code_img[i].machine_code.w.b1, code_img[i].machine_code.w.b2, code_img[i].machine_code.w.b3, code_img[i].machine_code.w.b4);
@@ -192,12 +194,12 @@ void output(char *filename) {
             }
             bytes_taken = data_img[i].bytes_taken;
             switch (bytes_taken) { /*checks how many bytes was taken by each member of data_img to access the right member(s) for printing*/
-                case 1:
+                case ONE_BYTE:
                     new_line_check(&space_count, &curr_address, ob_file);
                     fprintf(ob_file, " %02X", data_img[i].machine_code.b);
                     space_count++;
                     break;
-                case 2:
+                case HALF_WORD:
                     new_line_check(&space_count, &curr_address, ob_file);
                     fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b1);
                     space_count++;
@@ -205,7 +207,7 @@ void output(char *filename) {
                     fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b2);
                     space_count++;
                     break;
-                case 4:
+                case WORD:
                     new_line_check(&space_count, &curr_address, ob_file);
                     fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b1);
                     space_count++;

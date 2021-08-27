@@ -2,7 +2,7 @@
 * Title                 :   Header File for the whole Assembler
 * Filename              :   adc_app.h
 * Author                :   Itai Kimelman
-* Version               :   1.3.1
+* Version               :   1.4.0
 *****************************************************************************/
 /** \file assembler.h
  *  \brief This module contains all the function, macros, and constants that the assembler uses
@@ -17,7 +17,7 @@
 * Constants
 *******************************************************************************/
 /*argument amount limits*/
-enum ARG_LIMITS{
+enum ARG_LIMITS {
     MIN_ARGUMENTS =  2,
     MAX_ARGUMENTS  = 4
 };
@@ -36,7 +36,7 @@ enum COMMAND_TYPES {
 };
 
 /*data directive return values for is_data*/
-enum DATA_DIRECTIVES{
+enum DATA_DIRECTIVES {
     DB = 1,
     DH = 2,
     ASCIZ = 3,
@@ -44,13 +44,13 @@ enum DATA_DIRECTIVES{
 };
 
 /*label directive return values for ent_ext*/
-enum LABEL_DIRECTIVES{
+enum LABEL_DIRECTIVES {
     ENTRY = 1,
     EXTERN = 2
 };
 
 /*attributes for symbols (see symbol_node)*/
-enum ATTRIBUTES{
+enum ATTRIBUTES {
     CODE = 1,
     DATA = 2,
     EXTERNAL = 3
@@ -63,6 +63,12 @@ enum CHAR_LIMITS{
     MAX_LABEL = 31
 };
 
+/*for output() function*/
+enum BYTES_TO_PRINT {
+    ONE_BYTE = 1,
+    HALF_WORD = 2,
+    WORD = 4
+};
 #define NUM_ORDERS  27
 /******************************************************************************
 * Macros
@@ -254,6 +260,6 @@ void mem_deallocate();
 * The Two Assembler Passes Function Prototypes
 *******************************************************************************/
 int pass_one(char *filename);
-void pass_two(char *filename);
+int pass_two(char *filename);
 
 /*** End of File **************************************************************/

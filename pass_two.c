@@ -2,7 +2,7 @@
 * Title                 :   The Second Assembler Pass
 * Filename              :   pass_two.c
 * Author                :   Itai Kimelman
-* Version               :   1.3.1
+* Version               :   1.4.0
 *******************************************************************************/
 /** \file pass_two.c
  * \brief This module performs the 2nd assembler pass
@@ -45,7 +45,8 @@ void pass_two_error(char* filename,unsigned long num_ln) {
 * \section Description: this function performs the 2nd assembler pass on the current file.
 *                       it follows the algorithm mentioned below.
 * \param  		filename - the name of the current file
-* \note
+* \return       0 if no error was found. otherwise:  1
+*\note
  * the algorithm for the 2nd assembler pass is as follows:
  * 1. read the next line. if the file has ended : go to step 9.
  * 2. if this line is a comment line or an empty line, go to step 1.
@@ -59,7 +60,7 @@ void pass_two_error(char* filename,unsigned long num_ln) {
  * 9. we have reached the end of the source file. If there were errors, do not build the output files.
  * 10.  MAKE THE OUTPUT FILES
 *******************************************************************************/
-void pass_two(char *filename) {
+int pass_two(char *filename) {
     FILE *curr_file;
     unsigned long num_ln =0;
     char *line;
@@ -74,13 +75,14 @@ void pass_two(char *filename) {
     alloc_check(curr_file);
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
         fprintf(stderr,"error trying to pass on the file %s\n", filename);
-        return;
+        err2 = TRUE;
+        return err2;
     }
     line = (char*) malloc (sizeof(char) * MAX_LINE+1);
     alloc_check(line);
     label = (char*) malloc (sizeof(char) * MAX_LABEL+1);
     alloc_check(label);
-    while(TRUE){
+    while(TRUE) {
         num_ln++;
         /*step 1:*/
         if(read_line(curr_file,line) == FALSE)
@@ -146,6 +148,7 @@ void pass_two(char *filename) {
         /*step 10*/
         output(filename);
     }
+    return err2;
 }
 
 /*************** END OF FUNCTIONS ***************************************************************************/
