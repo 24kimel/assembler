@@ -2,7 +2,7 @@
 * Title                 :   Line Analysis
 * Filename              :   line_analysis.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.0
+* Version               :   1.4.1
 *******************************************************************************/
 /** \file line_analysis.c
  * \brief This file contains function that help analyzing each line in the source file
@@ -341,6 +341,8 @@ int order_structure(char *line) {
     while(spaceln(*ptr))
         ptr++;
     oc = get_opcode(line);
+    if(oc == NON_REAL_OPCODE)
+        return FALSE;
     if(next_op(ptr,FALSE) == -1)
         return FALSE;
     ptr+= next_op(ptr,FALSE);
@@ -700,4 +702,5 @@ int get_num_args(char *line) {
     }
     return num_args;
 }
+
 /*************** END OF FUNCTIONS ***************************************************************************/

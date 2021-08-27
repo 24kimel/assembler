@@ -2,7 +2,7 @@
 * Title                 :   Table Initialization, Build and Maintenance
 * Filename              :   tables.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.0
+* Version               :   1.4.1
 *******************************************************************************/
 /** \file tables.c
  * \brief This module contains function that maintain all the tables necessary to the assembler
@@ -16,6 +16,10 @@
 #include <string.h>
 #include "assembler.h"
 
+/******************************************************************************
+* Module Preprocessor Constants
+*******************************************************************************/
+#define NON_REAL_INDEX -1
 /******************************************************************************
 * Module Variable Definitions
 *******************************************************************************/
@@ -72,6 +76,9 @@ void initialize_tables(){
 *
 *******************************************************************************/
 unsigned get_opcode(char *line) {
+    if(order_index(line) == -1) {
+        return NON_REAL_OPCODE;
+    }
     return opcode_table[order_index(line)].opcode;
 }
 
@@ -93,20 +100,18 @@ int order_index(char *line) {
     scan_op(line, word);
     for(i = 0; i < NUM_ORDERS; i++) {
         if(strcmp(word,opcode_table[i].name)<0) {
-            fprintf(stderr,"line = %s\n", line);
             fprintf(stderr, "error: order %s does not exist ", word);
             free(word);
-            return -1;
+            return NON_REAL_INDEX;
         }
         if(strcmp(word,opcode_table[i].name)==0) {
             free(word);
             return i;
         }
     }
-    fprintf(stderr,"exited loop\nline = %s\n", line);
     fprintf(stderr, "error: order %s does not exist ", word);
     free(word);
-    return -1;
+    return NON_REAL_INDEX;
 }
 
 /******************************************************************************

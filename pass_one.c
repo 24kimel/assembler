@@ -2,7 +2,7 @@
 * Title                 :   The First Assembler Pass
 * Filename              :   pass_one.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.0
+* Version               :   1.4.1
 *******************************************************************************/
 /** \file pass_one.c
  * \brief This module performs the 1st assembler pass
@@ -223,4 +223,5 @@ int pass_one(char *filename) {
     update_symbol_table(ICF);
     return 0;
 }
+
 /*************** END OF FUNCTIONS ***************************************************************************/

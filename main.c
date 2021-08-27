@@ -2,7 +2,7 @@
 * Title                 :   Main Program
 * Filename              :   main.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.0
+* Version               :   1.4.1
 *******************************************************************************/
 /** \file main.c
  * \brief This module contains the main function of the assembler
@@ -41,4 +41,5 @@ int main(int argc, char **argv) {
     }
     return err_total;
 }
+
 /*************** END OF FUNCTIONS ***************************************************************************/

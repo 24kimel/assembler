@@ -2,7 +2,7 @@
 * Title                 :   Output files management
 * Filename              :   files.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.0
+* Version               :   1.4.1
 *******************************************************************************/
 /** \file files.c
  * \brief If there are no errors in the 1st and 2nd pass on
@@ -233,4 +233,5 @@ void output(char *filename) {
     free(ent_fname);
     free(ext_fname);
 }
+
 /*************** END OF FUNCTIONS ***************************************************************************/
