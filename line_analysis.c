@@ -2,7 +2,7 @@
 * Title                 :   Line Analysis
 * Filename              :   line_analysis.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.1
+* Version               :   1.4.2
 *******************************************************************************/
 /** \file line_analysis.c
  * \brief This file contains function that help analyzing each line in the source file
