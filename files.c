@@ -51,8 +51,7 @@ char* filename(char* name){
         fprintf(stderr,"error: non-compatible file format. all input files should be assembly files (file: %s)",name);
         return NULL;
     }
-    name = strncpy(name,name,strlen(name)-3);
-    return name;
+	return name;
 }
 
 /******************************************************************************
@@ -74,7 +73,7 @@ int num_files (int argc) {
         return FALSE;
     }
     if(argc>MAX_ARGUMENTS) {
-        fprintf(stderr,"error: too much input files(more than 3)");
+        fprintf(stderr,"error: too many input files(more than 3)");
         return FALSE;
     }
     return TRUE;
