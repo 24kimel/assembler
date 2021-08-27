@@ -2,7 +2,7 @@
 * Title                 :   The First Assembler Pass
 * Filename              :   pass_one.c
 * Author                :   Itai Kimelman
-* Version               :   1.3.0
+* Version               :   1.3.1
 *******************************************************************************/
 /** \file pass_one.c
  * \brief This module performs the 1st assembler pass

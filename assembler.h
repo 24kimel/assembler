@@ -2,7 +2,7 @@
 * Title                 :   Header File for the whole Assembler
 * Filename              :   adc_app.h
 * Author                :   Itai Kimelman
-* Version               :   1.3.0
+* Version               :   1.3.1
 *****************************************************************************/
 /** \file assembler.h
  *  \brief This module contains all the function, macros, and constants that the assembler uses

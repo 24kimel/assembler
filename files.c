@@ -2,7 +2,7 @@
 * Title                 :   Output files management
 * Filename              :   files.c
 * Author                :   Itai Kimelman
-* Version               :   1.3.0
+* Version               :   1.3.1
 *******************************************************************************/
 /** \file files.c
  * \brief If there are no errors in the 1st and 2nd pass on

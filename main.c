@@ -2,7 +2,7 @@
 * Title                 :   Main Program
 * Filename              :   main.c
 * Author                :   Itai Kimelman
-* Version               :   1.3.0
+* Version               :   1.3.1
 *******************************************************************************/
 /** \file main.c
  * \brief This module contains the main function of the assembler
@@ -29,7 +29,7 @@
 *
 *******************************************************************************/
 int main(int argc, char **argv) {
-    int i;
+    int i,err_file = 0;
     char *curr_file;
     if(num_files(argc) == 0) return 1;
     for(i = 1; i< argc; i++) {

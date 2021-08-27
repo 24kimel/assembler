@@ -2,7 +2,7 @@
 * Title                 :   Table Initialization, Build and Maintenance
 * Filename              :   tables.c
 * Author                :   Itai Kimelman
-* Version               :   1.3.0
+* Version               :   1.3.1
 *******************************************************************************/
 /** \file tables.c
  * \brief This module contains function that maintain all the tables necessary to the assembler
@@ -236,7 +236,7 @@ void cmd_to_info(char *line, unsigned IC) {
 * \return       TRUE if the info was completed successfully. FALSE if error was found
 *******************************************************************************/
 int complete_missing_info(char *label, char order_type, unsigned long IC) {
-    unsigned long address;
+    unsigned long address = 0;
     int i;
     symbol_node *curr = symbol_table;
     if(order_type == 'J') {
@@ -246,6 +246,7 @@ int complete_missing_info(char *label, char order_type, unsigned long IC) {
                 return TRUE;
         }
     }
+    /*pass on the symbol table.*/
     while(curr!=NULL) {
         if(strcmp(label,curr->symbol) == 0) {
             address = curr->address;
@@ -257,7 +258,6 @@ int complete_missing_info(char *label, char order_type, unsigned long IC) {
         fprintf(stderr,"error: label used as operand does not exist ");
         return FALSE;
     }
-    /*pass on the symbol table.*/
     if(order_type == 'I') {
         if(!in_lim((long int)(address-IC),16)) {
             fprintf(stderr,"error: immed value should be in 16 bit limits ");
@@ -279,7 +279,6 @@ int complete_missing_info(char *label, char order_type, unsigned long IC) {
     if(order_type == 'J') {
         if(address == 0) { /*external label*/
             add_to_ext_list(IC,label);
-            return TRUE;
         }
         for(i = 0; i < code_img_length; i++) {
             if(code_img[i].address == IC) {
