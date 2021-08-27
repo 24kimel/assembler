@@ -4,12 +4,7 @@
 /*TODO:
  * document */
 
-void alloc_check(void * x) {
-    if(x == NULL) {
-        fprintf(stderr,"memory allocation problems\n");
-        exit(1);
-    }
-}
+
 
 
 

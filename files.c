@@ -143,10 +143,7 @@ void output(char *filename) {
             }
         }
     }
-    free(code_img);
-    free(data_img);
-    deallocate_symbol_table();
-    deallocate_external_list();
+    mem_deallocate();
     free(ob_fname);
     free(ent_fname);
     free(ext_fname);

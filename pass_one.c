@@ -40,7 +40,7 @@ void pass_one_error(char* filename,unsigned long num_ln) {
     err_ln = TRUE;
     fprintf(stderr,"[%s | %lu]\n",filename,num_ln);
 }
-unsigned long DC,DCF;
+unsigned long DC,DCF; /*the current and final value of DC respectfully*/
 
 /*this func performs the 1st assembler pass on the file with name filename. follows the algorithm mentioned above
  * returns: 0 if no error was found, 1 if there was an error*/
@@ -56,7 +56,7 @@ int pass_one(char *filename) {
     IC = 100;
     DC = 0;
     initialize_tables();
-    build_tables();
+    mem_allocate();
     if((curr_file=fopen(filename,"r"))==NULL) {
         fprintf(stderr,"error while opening file");
         err1 = 1;
@@ -162,14 +162,17 @@ int pass_one(char *filename) {
     /*step 17:*/
     free((void *) (line));
     free ((void *) (label));
-    if(err1)
+    if(err1) {
+        mem_deallocate();
         return err1;
+    }
     /*step 18:*/
     ICF = IC;
     DCF = DC;
     /*check memory here:*/
     if(!memory_lim(ICF+DCF)) {
         fprintf(stderr,"error: this file requests more storage than this computer has (it has 2^25 bytes of storage) ");
+        mem_deallocate();
         err1 = 1;
     }
     /*step 19:*/

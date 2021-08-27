@@ -345,11 +345,6 @@ void add_to_ext_list(unsigned address, char *label) {
     curr->next = node;
 }
 
-void build_tables() {
-    build_code_img();
-    build_data_img();
-}
-
 /*this func completes all the missing info about certain I and J orders, where labels can show as operands
  * and the assembler does not know their address when passing on the file for the 1st time*/
 int complete_missing_info(char *label, char order_type, unsigned IC) {
@@ -411,26 +406,6 @@ int complete_missing_info(char *label, char order_type, unsigned IC) {
     return FALSE;
 }
 
-void deallocate_symbol_table(){
-    symbol_node *curr;
-    while(symbol_table!=NULL) {
-        curr = symbol_table;
-        symbol_table = symbol_table->next;
-        free(curr->symbol);
-        free(curr);
-    }
-
-}
-
-void deallocate_external_list(){
-    ext_node *curr;
-    while(external_list!=NULL) {
-        curr = external_list;
-        external_list = external_list->next;
-        free(curr->label);
-        free(curr);
-    }
-}
 
 void initialize_tables(){
     code_img = NULL;

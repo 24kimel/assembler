@@ -97,7 +97,6 @@ enum ATTRIBUTES{
 int add_symbol(unsigned address, char *symbol, int attribute, int is_entry);
 void update_symbol_table(unsigned ICF);
 int add_ent(char *symbol);
-void deallocate_symbol_table();
 
 char* filename(char* name);
 void output(char *filename);
@@ -199,8 +198,9 @@ typedef struct external_label_list {
 /*external label list:*/
 
 void add_to_ext_list(unsigned address, char *label);
-void deallocate_external_list();
 /*dynamic binding*/
 void alloc_check(void* x);
+void mem_allocate();
+void mem_deallocate();
 
 void initialize_tables();
