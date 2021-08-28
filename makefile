@@ -21,3 +21,6 @@ files.o: files.c assembler.h
 
 memory_mgmt.o: memory_mgmt.c assembler.h
 	gcc -c -ansi -Wall -pedantic memory_mgmt.c -o memory_mgmt.o
+
+clean:
+	rm -rf *.o assembler
