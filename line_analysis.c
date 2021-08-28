@@ -2,7 +2,7 @@
 * Title                 :   Line Analysis
 * Filename              :   line_analysis.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.3
 *******************************************************************************/
 /** \file line_analysis.c
  * \brief This file contains function that help analyzing each line in the source file
@@ -287,6 +287,38 @@ int ent_ext(char *line) {
     if(strcmp(word,".extern") ==0)
         return EXTERN;
     return FALSE;
+}
+
+/******************************************************************************
+* Function : check_ent_ext(char *line)
+*//**
+* \section Description: this function checks if this line is a valid .entry or .extern directive
+*
+* \param  		line - the current line(or part of it)
+* \return       1 if no error has occured. otherwise: 0
+*******************************************************************************/
+int check_ent_ext (char *line) {
+    char *ptr = line;
+    while(!isspace((int)*ptr))
+        ptr++;
+    
+    if(empty(ptr)) {
+        fprintf(stderr,"this directive requires an operand");
+        return FALSE;
+    }
+    
+    if(is_label(ptr,TRUE) == FALSE)
+            return FALSE;
+        while(isalpha((int)*ptr) || isdigit((int)*ptr))
+            ptr++;
+    
+    /*we have gone over all the operands*/
+    if(empty(ptr))
+        return TRUE;
+    else {
+        fprintf(stderr,"error: too much operands ");
+        return FALSE;
+    }
 }
 
 /******************************************************************************
