@@ -1,4 +1,4 @@
-CFLAGS=-ansi -Wall -pedantic -g
+CFLAGS=-ansi -Wall -pedantic
 assembler: main.o pass_one.o pass_two.o line_analysis.o tables.o files.o memory_mgmt.o
 	gcc $(CFLAGS) main.o pass_one.o pass_two.o line_analysis.o tables.o files.o memory_mgmt.o -o assembler
 
