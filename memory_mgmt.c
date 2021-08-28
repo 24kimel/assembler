@@ -21,6 +21,11 @@ extern data_image *data_img;
 extern unsigned long code_img_length, data_img_length;
 
 /******************************************************************************
+* Function Forward Declarations
+*******************************************************************************/
+void deallocate_external_list();
+void deallocate_symbol_table();
+/******************************************************************************
 * Function Definitions
 *******************************************************************************/
 /******************************************************************************
@@ -72,8 +77,6 @@ void mem_allocate() {
 *
 *******************************************************************************/
 void mem_deallocate() {
-    void deallocate_external_list();
-    void deallocate_symbol_table();
     free(code_img);
     free(data_img);
     deallocate_external_list();
