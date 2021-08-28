@@ -88,10 +88,10 @@ int pass_one(char *file_name) {
     unsigned long num_ln = 0;
     long unsigned IC;
     int label_flag; /*indicates if there is a label in the current line*/
-    char *line; /*the current line*/
-    char *pos;
+    char *line = NULL; /*the current line*/
+    char *pos = NULL;
     FILE *curr_file; /*pointer to file*/
-    char *label; /*saves label (if there is one)*/
+    char *label = NULL; /*saves label (if there is one)*/
     /*step 1:*/
     IC = 100;
     DC = 0;
@@ -200,8 +200,8 @@ int pass_one(char *file_name) {
         }
     }
     /*step 17:*/
-    free((void *) (line));
-    free ((void *) (label));
+    free(line);
+    free (label);
     if(err1 == STATUS_ERR) {
         return err1;
     }

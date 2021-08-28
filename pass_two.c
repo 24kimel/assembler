@@ -63,16 +63,19 @@ void pass_two_error(char* file_name,unsigned long num_ln) {
 int pass_two(char *file_name) {
     FILE *curr_file;
     unsigned long num_ln =0;
-    char *line;
+    char *line = NULL;
     char *pos = NULL;
-    char *label;
+    char *label = NULL;
     unsigned long IC = 100;
     unsigned opcode;
     int i;
     char order_type;
     err2 = STATUS_OK;
-    curr_file = fopen(file_name,"r");
-    alloc_check(curr_file);
+   	if((curr_file=fopen(file_name,"r"))==NULL) {
+        fprintf(stderr,"error while opening file");
+     	err2 = STATUS_ERR;
+        return err2;
+    }
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
         fprintf(stderr,"error trying to pass on the file %s\n", file_name);
         err2 = STATUS_ERR;
@@ -142,8 +145,8 @@ int pass_two(char *file_name) {
         }
     }
     /*step 9*/
-    free((void *) (line));
-    free((void *) (label));
+    free(line);
+    free(label);
     return err2;
 }
 

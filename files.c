@@ -219,32 +219,32 @@ void write_to_ob_file(FILE *ob_file, char *ob_fname) {
                     fprintf(ob_file, " %02X", data_img[i].machine_code.b);
                     space_count++;
                     break;
-                    case HALF_WORD:
-                        new_line_check(&space_count, &curr_address, ob_file);
-                        fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b1);
-                        space_count++;
-                        new_line_check(&space_count, &curr_address, ob_file);
-                        fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b2);
-                        space_count++;
-                        break;
-                        case WORD:
-                            new_line_check(&space_count, &curr_address, ob_file);
-                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b1);
-                            space_count++;
-                            new_line_check(&space_count, &curr_address, ob_file);
-                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b2);
-                            space_count++;
-                            new_line_check(&space_count, &curr_address, ob_file);
-                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b3);
-                            space_count++;
-                            new_line_check(&space_count, &curr_address, ob_file);
-                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b4);
-                            space_count++;
-                            break;
-                            /*always should be 1,2, or 4*/
-                            default:
-                                fprintf(stderr, "this should not happen (data printing for %s)\n", ob_fname);
-                                return;
+              	case HALF_WORD:
+               		new_line_check(&space_count, &curr_address, ob_file);
+                    fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b1);
+                   	space_count++;
+                    new_line_check(&space_count, &curr_address, ob_file);
+                    fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b2);
+                    space_count++;
+                    break;
+				case WORD:
+               		new_line_check(&space_count, &curr_address, ob_file);
+                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b1);
+                    space_count++;
+                    new_line_check(&space_count, &curr_address, ob_file);
+                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b2);
+                    space_count++;
+                    new_line_check(&space_count, &curr_address, ob_file);
+                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b3);
+                    space_count++;
+					new_line_check(&space_count, &curr_address, ob_file);
+                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b4);
+                    space_count++;
+                    break;
+				/*always should be 1,2, or 4*/
+                default:
+                	fprintf(stderr, "this should not happen (data printing for %s)\n", ob_fname);
+                    return;
             }
         }
     }

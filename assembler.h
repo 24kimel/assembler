@@ -270,7 +270,7 @@ void mem_deallocate();
 /******************************************************************************
 * The Two Assembler Passes Function Prototypes
 *******************************************************************************/
-int pass_one(char *filename);
-int pass_two(char *filename);
+int pass_one(char *file_name);
+int pass_two(char *file_name);
 
 /*** End of File **************************************************************/
