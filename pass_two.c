@@ -2,7 +2,7 @@
 * Title                 :   The Second Assembler Pass
 * Filename              :   pass_two.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.1
+* Version               :   1.4.2
 *******************************************************************************/
 /** \file pass_two.c
  * \brief This module performs the 2nd assembler pass
