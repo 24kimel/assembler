@@ -79,7 +79,7 @@ int num_files (int argc) {
         return FALSE;
     }
     if(argc>MAX_ARGUMENTS) {
-        fprintf(stderr,"error: too much input files(more than 3)");
+        fprintf(stderr,"error: too many input files(more than 3)");
         return FALSE;
     }
     return TRUE;
@@ -108,14 +108,15 @@ void new_line_check(int *space_count,unsigned long *address, FILE *ob_file) {
 }
 
 /******************************************************************************
-* Function : output(char *filename)
+* Function : output(char *file_name)
 *//**
 * \section Description: creates output files (see \brief)
 *
 * \param  		file_name - the name of the source file
+* \return       0 if no error was found. otherwise:  1
 *
 *******************************************************************************/
-void output(char *file_name) {
+int output(char *file_name) {
     FILE *ob_file;
     FILE *ent_file;
     FILE *ext_file;
@@ -141,7 +142,10 @@ void output(char *file_name) {
         ent_file = fopen(ent_fname,"w");
         if(ent_file == NULL) {
             fprintf(stderr,"error: cannot make output file [%s]",ent_fname);
-            return;
+			free(ob_fname);
+			free(ent_fname);
+			free(ext_fname);
+			return 1;
         }
         write_to_ent_file(ent_file);
     }
@@ -152,7 +156,10 @@ void output(char *file_name) {
         /*write to ext file*/
         if(ext_file == NULL) {
             fprintf(stderr,"error: cannot make output file [%s]",ext_fname);
-            return;
+			free(ob_fname);
+			free(ent_fname);
+			free(ext_fname);
+			return 1;
         }
         write_to_ext_file(ext_file);
     }
@@ -161,14 +168,16 @@ void output(char *file_name) {
     ob_file = fopen(ob_fname,"w");
     if(ob_file == NULL) {
         fprintf(stderr,"error: cannot make output file [%s]",ob_fname);
-        return;
+    	free(ent_fname);
+		free(ob_fname);
+    	free(ext_fname);
+        return 1;
     }
     write_to_ob_file(ob_file,ob_fname);
-    /*we have performed the 2nd assembler pass on the current file. now we can free all the memory allocated*/
-    mem_deallocate();
-    free(ob_fname);
+	free(ob_fname);
     free(ent_fname);
     free(ext_fname);
+	return 0;
 }
 
 /******************************************************************************
@@ -265,7 +274,7 @@ void write_to_ent_file(FILE *ent_file) {
 }
 
 /******************************************************************************
-* Function : write_to_ob_file(FILE *ext_file);
+* Function : write_to_ext_file(FILE *ext_file);
 *//**
 * \section Description: writes to external file
 *

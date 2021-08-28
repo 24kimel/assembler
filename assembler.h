@@ -248,7 +248,7 @@ int add_ent(char *symbol);
 * Function Prototypes for Files
 *******************************************************************************/
 char* filename(char* name);
-void output(char *filename);
+int output(char *file_name);
 int num_files (int argc);
 
 /******************************************************************************

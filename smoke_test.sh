@@ -5,7 +5,7 @@
 # expecting input file (.as) and output files (.ob .ent .ext) in ./smoke_test directory
 
 # test settings
-assembler="iassembler.exe"
+assembler="assembler.exe"
 asm_filename=$1
 EXIT_OK=0
 
