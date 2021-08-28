@@ -80,12 +80,9 @@ int spaceln(char c) {
 *
 *******************************************************************************/
 int empty(char *line) {
-    char *ptr;
-    if(strcmp(line,"") == 0)
+    char *ptr = line;
+    if(strcmp(ptr,"") == 0)
         return TRUE;
-    ptr = (char*) malloc (MAX_LINE);
-    alloc_check(ptr);
-    strcpy(ptr,line);
     while(spaceln(*ptr))
         ptr++;
     if(endline(*ptr))
@@ -275,6 +272,7 @@ int is_data(char *line) {
 *******************************************************************************/
 int ent_ext(char *line) {
     int i = 0;
+	int retval = 0;
     char *word = (char*) malloc(sizeof(char) * (MAX_LINE+1));
     alloc_check(word);
     while(!isspace((int)line[i])) {
@@ -283,10 +281,11 @@ int ent_ext(char *line) {
     }
     word[i] = '\0';
     if(strcmp(word,".entry")==0)
-        return ENTRY;
-    if(strcmp(word,".extern") ==0)
-        return EXTERN;
-    return FALSE;
+		retval = ENTRY;
+    else if(strcmp(word,".extern") ==0)
+		retval = EXTERN;
+	free(word);
+	return retval;
 }
 
 /******************************************************************************
@@ -488,7 +487,7 @@ int order_structure(char *line) {
     if(empty(ptr))
         return TRUE;
     else {
-        fprintf(stderr,"error: too much operands ");
+        fprintf(stderr,"error: too many operands ");
         return FALSE;
     }
 }
@@ -639,15 +638,15 @@ int compatible_args(char *line) {
         case DB:
             directive_name = ".db";
             break;
-            case DH:
-                directive_name = ".dh";
-                break;
-                case DW:
-                    directive_name = ".dw";
-                    break;
-                    default:
-                        fprintf(stderr,"this should not happen [compatible_args switch]");
-                        return FALSE;
+		case DH:
+        	directive_name = ".dh";
+            break;
+		case DW:
+        	directive_name = ".dw";
+            break;
+		default:
+            fprintf(stderr,"this should not happen [compatible_args switch]");
+        	return FALSE;
     }
     if(intlen(ptr) == 0) {
         fprintf(stderr,"error: %s only works with integers ",directive_name);
@@ -677,11 +676,8 @@ int compatible_args(char *line) {
 * \return       the length of the string in the asciz directive
 *******************************************************************************/
 int asciz_len(char *line) {
-    char *ptr;
+    char *ptr = line;
     int length = 0;
-    ptr = (char*) malloc (MAX_LINE+1);
-    alloc_check(ptr);
-    strcpy(ptr,line);
     ptr++; /*skipping opening '\"'*/
     while(!empty(ptr)) {
         ptr++;

@@ -42,9 +42,9 @@ ext_node *external_list;
 /*other global vars*/
 unsigned long code_img_length = 0; /*length of code image table*/
 unsigned long data_img_length = 0; /*length of data image table*/
-int data_exists =FALSE; /*indicates if there is data*/
+int data_exists = FALSE; /*indicates if there is data*/
 extern unsigned long DC; /*current data counter*/
-int entries_exist; /*indicates if there are labels that are entry points*/
+int entries_exist = FALSE; /*indicates if there are labels that are entry points*/
 /******************************************************************************
 * Function Prototypes
 *******************************************************************************/
@@ -132,7 +132,9 @@ int num_ops_expected(unsigned opcode) {
 *******************************************************************************/
 int order_index(char *line) {
     int i;
-    char *word = (char *)malloc(MAX_LINE+1);
+    char *word = NULL;
+	word = (char *)malloc(MAX_LINE+1);
+	alloc_check(word);
     scan_op(line, word);
     for(i = 0; i < NUM_ORDERS; i++) {
         if(strcmp(word,opcode_table[i].name)<0) {
@@ -191,12 +193,12 @@ void cmd_to_info(char *line, unsigned IC) {
         case R_CMD:
             code_r_cmd(line, opcode, funct, &printable);
             break;
-            case I_CMD:
-                code_i_cmd(line, opcode, &printable);
-                break;
-                case J_CMD:
-                    code_j_cmd(line, opcode, &printable);
-                    break;
+		case I_CMD:
+        	code_i_cmd(line, opcode, &printable);
+            break;
+		case J_CMD:
+        	code_j_cmd(line, opcode, &printable);
+            break;
     }
     img.address = IC;
     img.machine_code = printable;
@@ -424,7 +426,7 @@ void data_to_info(char *line) {
     }
 
     line+= next_op(line,FALSE);
-    if(d==3) {
+    if(d == ASCIZ) {
         len = asciz_len(line);          /* num characters */
         data_img_length += (len+1);       /* placeholder for null term */
     } else {
@@ -438,15 +440,15 @@ void data_to_info(char *line) {
         case DB:
             code_db(line,num_args,pos);
             break;
-            case DH:
-                code_dh(line,num_args,pos);
-                break;
-                case ASCIZ:
-                    code_asciz(line,pos);
-                    break;
-                    case DW:
-                        code_dw(line,num_args,pos);
-                        break;
+		case DH:
+        	code_dh(line,num_args,pos);
+            break;
+		case ASCIZ:
+    		code_asciz(line,pos);
+        	break;
+		case DW:
+        	code_dw(line,num_args,pos);
+            break;
     }
 }
 

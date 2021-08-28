@@ -42,7 +42,7 @@ void alloc_check(void * x) {
     if(x == NULL) {
         fprintf(stderr,"memory allocation problems\n");
         mem_deallocate();
-        exit(1);
+        exit(STATUS_ERR);
     }
 }
 
