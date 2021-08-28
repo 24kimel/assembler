@@ -2,7 +2,7 @@
 * Title                 :   Table Initialization, Build and Maintenance
 * Filename              :   tables.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.3
 *******************************************************************************/
 /** \file tables.c
  * \brief This module contains function that maintain all the tables necessary to the assembler
