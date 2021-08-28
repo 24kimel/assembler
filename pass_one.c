@@ -2,7 +2,7 @@
 * Title                 :   The First Assembler Pass
 * Filename              :   pass_one.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.3
 *******************************************************************************/
 /** \file pass_one.c
  * \brief This module performs the 1st assembler pass
@@ -163,17 +163,11 @@ int pass_one(char *file_name) {
             if(ent_ext(pos)) {
                 /*steps 10,11:*/
                 if(ent_ext(pos) == EXTERN) {
-                    pos+= next_op(pos,FALSE);
-                    if(!is_label(pos,TRUE)) {
+                    if(check_ent_ext(pos) == FALSE) {
                         pass_one_error(file_name,num_ln);
                     } else {
+                        pos+= next_op(pos, FALSE);
                         scan_label(pos, label);
-                        pos+=strlen(label);
-                        if(!empty(pos)) {
-                            fprintf(stderr,"too much operands for .extern ");
-                            pass_one_error(file_name,num_ln);
-                        }
-
                         if (err_ln == FALSE) {
                             if (add_symbol(0, label, EXTERNAL, FALSE) == FALSE)
                                 pass_one_error(file_name, num_ln);

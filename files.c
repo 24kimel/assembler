@@ -2,7 +2,7 @@
 * Title                 :   Output files management
 * Filename              :   files.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.3
 *******************************************************************************/
 /** \file files.c
  * \brief If there are no errors in the 1st and 2nd pass on
@@ -34,7 +34,7 @@ extern int data_exists,entries_exist;
 /******************************************************************************
 * Function Prototypes
 *******************************************************************************/
-void write_to_ob_file(FILE *ob_file, char *ob_fname);
+int write_to_ob_file(FILE *ob_file, char *ob_fname);
 void write_to_ent_file(FILE *ent_file);
 void write_to_ext_file(FILE *ext_file);
 /******************************************************************************
@@ -123,7 +123,7 @@ int output(char *file_name) {
     char *ob_fname = (char*) malloc (MAX_FILE_NAME);
     char *ent_fname = (char*) malloc (MAX_FILE_NAME);
     char *ext_fname = (char*) malloc (MAX_FILE_NAME);
-
+    int err_ob_file = STATUS_OK;
     /*making all the needed file names*/
     alloc_check(ob_fname);
     alloc_check(ent_fname);
@@ -173,11 +173,11 @@ int output(char *file_name) {
         free(ext_fname);
         return STATUS_ERR;
     }
-    write_to_ob_file(ob_file,ob_fname);
+    err_ob_file = write_to_ob_file(ob_file,ob_fname);
     free(ob_fname);
     free(ent_fname);
     free(ext_fname);
-    return STATUS_OK;
+    return err_ob_file;
 }
 
 /******************************************************************************
@@ -196,7 +196,7 @@ int output(char *file_name) {
 *               to code it this way we need to do a loop in the loop for data
 *               using the partition to bytes made by the unions and structs
 *******************************************************************************/
-void write_to_ob_file(FILE *ob_file, char *ob_fname) {
+int write_to_ob_file(FILE *ob_file, char *ob_fname) {
     int i;
     unsigned long curr_address;
     int bytes_taken;
@@ -219,35 +219,36 @@ void write_to_ob_file(FILE *ob_file, char *ob_fname) {
                     fprintf(ob_file, " %02X", data_img[i].machine_code.b);
                     space_count++;
                     break;
-              	case HALF_WORD:
-               		new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b1);
-                   	space_count++;
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b2);
-                    space_count++;
-                    break;
-				case WORD:
-               		new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b1);
-                    space_count++;
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b2);
-                    space_count++;
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b3);
-                    space_count++;
-					new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b4);
-                    space_count++;
-                    break;
-				/*always should be 1,2, or 4*/
-                default:
-                	fprintf(stderr, "this should not happen (data printing for %s)\n", ob_fname);
-                    return;
+                    case HALF_WORD:
+                        new_line_check(&space_count, &curr_address, ob_file);
+                        fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b1);
+                        space_count++;
+                        new_line_check(&space_count, &curr_address, ob_file);
+                        fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b2);
+                        space_count++;
+                        break;
+                        case WORD:
+                            new_line_check(&space_count, &curr_address, ob_file);
+                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b1);
+                            space_count++;
+                            new_line_check(&space_count, &curr_address, ob_file);
+                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b2);
+                            space_count++;
+                            new_line_check(&space_count, &curr_address, ob_file);
+                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b3);
+                            space_count++;
+                            new_line_check(&space_count, &curr_address, ob_file);
+                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b4);
+                            space_count++;
+                            break;
+                            /*always should be 1,2, or 4*/
+                            default:
+                                fprintf(stderr, "this should not happen (data printing for %s)\n", ob_fname);
+                                return STATUS_ERR;
             }
         }
     }
+    return STATUS_OK;
 }
 
 /******************************************************************************

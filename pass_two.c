@@ -2,7 +2,7 @@
 * Title                 :   The Second Assembler Pass
 * Filename              :   pass_two.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.3
 *******************************************************************************/
 /** \file pass_two.c
  * \brief This module performs the 2nd assembler pass
@@ -11,9 +11,8 @@
 * Includes
 *******************************************************************************/
 #include <stdio.h>
-#include "assembler.h"
 #include <stdlib.h>
-#include <string.h>
+#include "assembler.h"
 
 /******************************************************************************
 * Module Variable Definitions
@@ -107,15 +106,14 @@ int pass_two(char *file_name) {
         if(ent_ext(pos) == ENTRY) { /*entry directive(step 5)*/
             /*skipping to the operand of the directive*/
             /*step 6:*/
-            pos += next_op(pos,FALSE);
-            scan_label(pos, label);
-            pos +=strlen(label);
-            if(!empty(pos)) {
-                fprintf(stderr,"too much operands for .entry ");
+            if(check_ent_ext(pos) == FALSE) {
                 pass_two_error(file_name,num_ln);
-            }
-            if(add_ent(label) == FALSE) {
-                pass_two_error(file_name,num_ln);
+            } else {
+                pos+= next_op(pos,FALSE);
+                scan_label(pos,label);
+                if (add_ent(label) == FALSE) {
+                    pass_two_error(file_name, num_ln);
+                }
             }
         } else {
             /*steps 7 and 8*/

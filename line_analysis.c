@@ -298,24 +298,26 @@ int ent_ext(char *line) {
 *******************************************************************************/
 int check_ent_ext (char *line) {
     char *ptr = line;
+    /*skipping directive*/
     while(!isspace((int)*ptr))
         ptr++;
-    
+    while(spaceln(*ptr))
+        ptr++;
     if(empty(ptr)) {
-        fprintf(stderr,"this directive requires an operand");
+        fprintf(stderr,"error: this directive requires an operand ");
         return FALSE;
     }
-    
+
     if(is_label(ptr,TRUE) == FALSE)
-            return FALSE;
-        while(isalpha((int)*ptr) || isdigit((int)*ptr))
-            ptr++;
-    
+        return FALSE;
+    /*skipping the operand*/
+    while(!isspace((int)*ptr))
+        ptr++;
     /*we have gone over all the operands*/
     if(empty(ptr))
         return TRUE;
     else {
-        fprintf(stderr,"error: too much operands ");
+        fprintf(stderr,"error: too much operands for this directive ");
         return FALSE;
     }
 }
