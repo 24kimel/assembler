@@ -227,7 +227,6 @@ void output(char *filename) {
             }
         }
     }
-    mem_deallocate();
     free(ob_fname);
     free(ent_fname);
     free(ext_fname);
