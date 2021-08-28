@@ -96,8 +96,7 @@ int pass_one(char *file_name) {
     IC = 100;
     DC = 0;
     err1 = FALSE;
-    initialize_tables();
-    mem_allocate();
+   
     if((curr_file=fopen(file_name,"r"))==NULL) {
         fprintf(stderr,"error while opening file");
         err1 = 1;
@@ -204,7 +203,6 @@ int pass_one(char *file_name) {
     free((void *) (line));
     free ((void *) (label));
     if(err1) {
-        mem_deallocate();
         return err1;
     }
     /*step 18:*/
@@ -213,8 +211,8 @@ int pass_one(char *file_name) {
     /*check memory here:*/
     if(!memory_lim(ICF+DCF)) {
         fprintf(stderr,"error: this file requests more storage than this computer has (it has 2^25 bytes of storage) ");
-        mem_deallocate();
         err1 = TRUE;
+		return err1;
     }
     /*step 19:*/
     if(data_exists)

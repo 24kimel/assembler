@@ -29,16 +29,29 @@
 *
 *******************************************************************************/
 int main(int argc, char **argv) {
-    int i,err,err_total = FALSE;
+    int i, err, err_total;
     char *curr_file;
-    if(num_files(argc) == 0)
-        return 1;
+	err_total = 0;
+    if(num_files(argc) == 0) return 1;
     for(i = 1; i< argc; i++) {
         if ((curr_file = filename(argv[i])) != NULL) {
-            if ((err = pass_one(curr_file)) == FALSE) {
-                err = pass_two(curr_file);
-            }
-            err_total+=err;
+				initialize_tables();
+				mem_allocate();
+				err = pass_one(curr_file);
+				err_total += err;				
+				if (err) {
+					mem_deallocate();
+					continue;
+				}
+				err = pass_two(curr_file);				
+				err_total += err;
+				if (err) {
+					mem_deallocate();
+					continue;
+				}
+				err = output(curr_file);
+				err_total += err;
+				mem_deallocate();
         }
     }
     return err_total;

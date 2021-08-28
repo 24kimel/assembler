@@ -144,10 +144,6 @@ int pass_two(char *file_name) {
     /*step 9*/
     free((void *) (line));
     free((void *) (label));
-    if(err2 == FALSE) {
-        /*step 10*/
-        output(file_name);
-    }
     return err2;
 }
 
