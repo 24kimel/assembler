@@ -2,7 +2,7 @@
 * Title                 :   Table Initialization, Build and Maintenance
 * Filename              :   tables.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.0
+* Version               :   1.5.1
 *******************************************************************************/
 /** \file tables.c
  * \brief This module contains function that maintain all the tables necessary to the assembler
@@ -191,12 +191,12 @@ void cmd_to_info(char *line, unsigned IC) {
         case R_CMD:
             code_r_cmd(line, opcode, funct, &printable);
             break;
-        case I_CMD:
-            code_i_cmd(line, opcode, &printable);
-            break;
-        case J_CMD:
-            code_j_cmd(line, opcode, &printable);
-            break;
+            case I_CMD:
+                code_i_cmd(line, opcode, &printable);
+                break;
+                case J_CMD:
+                    code_j_cmd(line, opcode, &printable);
+                    break;
     }
     img.address = IC;
     img.machine_code = printable;
@@ -438,15 +438,15 @@ void data_to_info(char *line) {
         case DB:
             code_db(line,num_args,pos);
             break;
-        case DH:
-            code_dh(line,num_args,pos);
-            break;
-        case ASCIZ:
-            code_asciz(line,pos);
-            break;
-        case DW:
-            code_dw(line,num_args,pos);
-            break;
+            case DH:
+                code_dh(line,num_args,pos);
+                break;
+                case ASCIZ:
+                    code_asciz(line,pos);
+                    break;
+                    case DW:
+                        code_dw(line,num_args,pos);
+                        break;
     }
 }
 

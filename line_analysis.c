@@ -2,7 +2,7 @@
 * Title                 :   Line Analysis
 * Filename              :   line_analysis.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.0
+* Version               :   1.5.1
 *******************************************************************************/
 /** \file line_analysis.c
  * \brief This file contains function that help analyzing each line in the source file
@@ -607,15 +607,15 @@ int compatible_args(char *line) {
         case DB:
             directive_name = ".db";
             break;
-        case DH:
-            directive_name = ".dh";
-            break;
-        case DW:
-            directive_name = ".dw";
-            break;
-        default:
-            fprintf(stderr,"this should not happen [compatible_args switch]");
-            return FALSE;
+            case DH:
+                directive_name = ".dh";
+                break;
+                case DW:
+                    directive_name = ".dw";
+                    break;
+                    default:
+                        fprintf(stderr,"this should not happen [compatible_args switch]");
+                        return FALSE;
     }
     if(intlen(ptr) == 0) {
         fprintf(stderr,"error: %s only works with integers ",directive_name);

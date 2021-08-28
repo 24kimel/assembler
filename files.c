@@ -2,7 +2,7 @@
 * Title                 :   Output files management
 * Filename              :   files.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.0
+* Version               :   1.5.1
 *******************************************************************************/
 /** \file files.c
  * \brief If there are no errors in the 1st and 2nd pass on
@@ -142,10 +142,10 @@ int output(char *file_name) {
         ent_file = fopen(ent_fname,"w");
         if(ent_file == NULL) {
             fprintf(stderr,"error: cannot make output file [%s]",ent_fname);
-			free(ob_fname);
-			free(ent_fname);
-			free(ext_fname);
-			return 1;
+            free(ob_fname);
+            free(ent_fname);
+            free(ext_fname);
+            return 1;
         }
         write_to_ent_file(ent_file);
     }
@@ -156,10 +156,10 @@ int output(char *file_name) {
         /*write to ext file*/
         if(ext_file == NULL) {
             fprintf(stderr,"error: cannot make output file [%s]",ext_fname);
-			free(ob_fname);
-			free(ent_fname);
-			free(ext_fname);
-			return 1;
+            free(ob_fname);
+            free(ent_fname);
+            free(ext_fname);
+            return 1;
         }
         write_to_ext_file(ext_file);
     }
@@ -168,16 +168,16 @@ int output(char *file_name) {
     ob_file = fopen(ob_fname,"w");
     if(ob_file == NULL) {
         fprintf(stderr,"error: cannot make output file [%s]",ob_fname);
-    	free(ent_fname);
-		free(ob_fname);
-    	free(ext_fname);
+        free(ent_fname);
+        free(ob_fname);
+        free(ext_fname);
         return 1;
     }
     write_to_ob_file(ob_file,ob_fname);
-	free(ob_fname);
+    free(ob_fname);
     free(ent_fname);
     free(ext_fname);
-	return 0;
+    return 0;
 }
 
 /******************************************************************************
@@ -219,32 +219,32 @@ void write_to_ob_file(FILE *ob_file, char *ob_fname) {
                     fprintf(ob_file, " %02X", data_img[i].machine_code.b);
                     space_count++;
                     break;
-                case HALF_WORD:
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b1);
-                    space_count++;
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b2);
-                    space_count++;
-                    break;
-                case WORD:
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b1);
-                    space_count++;
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b2);
-                    space_count++;
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b3);
-                    space_count++;
-                    new_line_check(&space_count, &curr_address, ob_file);
-                    fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b4);
-                    space_count++;
-                    break;
-                    /*always should be 1,2, or 4*/
-                default:
-                    fprintf(stderr, "this should not happen (data printing for %s)\n", ob_fname);
-                    return;
+                    case HALF_WORD:
+                        new_line_check(&space_count, &curr_address, ob_file);
+                        fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b1);
+                        space_count++;
+                        new_line_check(&space_count, &curr_address, ob_file);
+                        fprintf(ob_file, " %02X", data_img[i].machine_code.dh.h.b2);
+                        space_count++;
+                        break;
+                        case WORD:
+                            new_line_check(&space_count, &curr_address, ob_file);
+                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b1);
+                            space_count++;
+                            new_line_check(&space_count, &curr_address, ob_file);
+                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b2);
+                            space_count++;
+                            new_line_check(&space_count, &curr_address, ob_file);
+                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b3);
+                            space_count++;
+                            new_line_check(&space_count, &curr_address, ob_file);
+                            fprintf(ob_file, " %02X", data_img[i].machine_code.dw.w.b4);
+                            space_count++;
+                            break;
+                            /*always should be 1,2, or 4*/
+                            default:
+                                fprintf(stderr, "this should not happen (data printing for %s)\n", ob_fname);
+                                return;
             }
         }
     }
@@ -291,4 +291,5 @@ void write_to_ext_file(FILE *ext_file) {
         curr_2 = curr_2->next;
     }
 }
+
 /*************** END OF FUNCTIONS ***************************************************************************/

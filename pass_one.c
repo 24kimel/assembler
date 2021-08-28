@@ -2,7 +2,7 @@
 * Title                 :   The First Assembler Pass
 * Filename              :   pass_one.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.0
+* Version               :   1.5.1
 *******************************************************************************/
 /** \file pass_one.c
  * \brief This module performs the 1st assembler pass
@@ -96,7 +96,7 @@ int pass_one(char *file_name) {
     IC = 100;
     DC = 0;
     err1 = FALSE;
-   
+
     if((curr_file=fopen(file_name,"r"))==NULL) {
         fprintf(stderr,"error while opening file");
         err1 = 1;
@@ -212,7 +212,7 @@ int pass_one(char *file_name) {
     if(!memory_lim(ICF+DCF)) {
         fprintf(stderr,"error: this file requests more storage than this computer has (it has 2^25 bytes of storage) ");
         err1 = TRUE;
-		return err1;
+        return err1;
     }
     /*step 19:*/
     if(data_exists)
