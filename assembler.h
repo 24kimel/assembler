@@ -2,7 +2,7 @@
 * Title                 :   Header File for the whole Assembler
 * Filename              :   adc_app.h
 * Author                :   Itai Kimelman
-* Version               :   1.4.2
+* Version               :   1.5.0
 *****************************************************************************/
 /** \file assembler.h
  *  \brief This module contains all the function, macros, and constants that the assembler uses
@@ -69,6 +69,11 @@ enum BYTES_TO_PRINT {
     HALF_WORD = 2,
     WORD = 4
 };
+
+#define NOT_REG -1
+#define REG_MIN 0
+#define REG_MAX 31
+#define NON_VALID_OPERAND -1
 #define NUM_ORDERS  27
 #define NON_REAL_OPCODE 64
 /******************************************************************************
@@ -221,6 +226,7 @@ void initialize_tables();
 /******************************************************************************
 * Function Prototypes for Order Lines
 *******************************************************************************/
+int num_ops_expected(unsigned opcode);
 int complete_missing_info(char *label, char order_type, unsigned long IC);
 unsigned get_opcode(char *line);
 void cmd_to_info(char *line, unsigned IC);

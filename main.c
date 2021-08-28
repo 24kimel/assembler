@@ -2,7 +2,7 @@
 * Title                 :   Main Program
 * Filename              :   main.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.2
+* Version               :   1.5.0
 *******************************************************************************/
 /** \file main.c
  * \brief This module contains the main function of the assembler
@@ -29,28 +29,16 @@
 *
 *******************************************************************************/
 int main(int argc, char **argv) {
-    int i, err, err_total;
+    int i,err,err_total = FALSE;
     char *curr_file;
-	err_total = 0;
-    if(num_files(argc) == 0) return 1;
+    if(num_files(argc) == 0)
+        return 1;
     for(i = 1; i< argc; i++) {
         if ((curr_file = filename(argv[i])) != NULL) {
-				initialize_tables();
-				mem_allocate();
-				err = pass_one(curr_file);
-				if (err) {
-					err_total += err;
-					mem_deallocate();
-					continue;
-				}
-				err = pass_two(curr_file);
-				if (err) {
-					err_total += err;
-					mem_deallocate();
-					continue;
-				}
-				output(curr_file);
-				mem_deallocate();
+            if ((err = pass_one(curr_file)) == FALSE) {
+                err = pass_two(curr_file);
+            }
+            err_total+=err;
         }
     }
     return err_total;

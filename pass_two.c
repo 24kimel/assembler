@@ -2,7 +2,7 @@
 * Title                 :   The Second Assembler Pass
 * Filename              :   pass_two.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.2
+* Version               :   1.5.0
 *******************************************************************************/
 /** \file pass_two.c
  * \brief This module performs the 2nd assembler pass
@@ -24,27 +24,27 @@ int err2;
 * Function Definitions
 *******************************************************************************/
 /******************************************************************************
-* Function : pass_two_error(char *filename, unsigned long num_ln)
+* Function : pass_two_error(char *file_name, unsigned long num_ln)
 *//**
 * \section Description Description: this function is used when an error in input occurs during the 2nd pass.
 *                       it turns on the err2 flag, and prints out the name of the file and line number,
 *                       so the user will know where the error was found.
 *
-* \param  		filename - the name of the current file
+* \param  		file_name - the name of the current file
 * \param        num_ln - the number of the current line
 *
 *******************************************************************************/
-void pass_two_error(char* filename,unsigned long num_ln) {
+void pass_two_error(char* file_name,unsigned long num_ln) {
     err2 = TRUE;
-    fprintf(stderr,"[%s | %lu]\n",filename,num_ln);
+    fprintf(stderr,"[%s | %lu]\n",file_name,num_ln);
 }
 
 /******************************************************************************
-* Function : pass_two(char *filename)
+* Function : pass_two(char *file_name)
 *//**
 * \section Description: this function performs the 2nd assembler pass on the current file.
 *                       it follows the algorithm mentioned below.
-* \param  		filename - the name of the current file
+* \param  		file_name - the name of the current file
 * \return       0 if no error was found. otherwise:  1
 *\note
  * the algorithm for the 2nd assembler pass is as follows:
@@ -60,7 +60,7 @@ void pass_two_error(char* filename,unsigned long num_ln) {
  * 9. we have reached the end of the source file. If there were errors, do not build the output files.
  * 10.  MAKE THE OUTPUT FILES
 *******************************************************************************/
-int pass_two(char *filename) {
+int pass_two(char *file_name) {
     FILE *curr_file;
     unsigned long num_ln =0;
     char *line;
@@ -71,10 +71,10 @@ int pass_two(char *filename) {
     int i;
     char order_type;
     err2 = FALSE;
-    curr_file = fopen(filename,"r");
+    curr_file = fopen(file_name,"r");
     alloc_check(curr_file);
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
-        fprintf(stderr,"error trying to pass on the file %s\n", filename);
+        fprintf(stderr,"error trying to pass on the file %s\n", file_name);
         err2 = TRUE;
         return err2;
     }
@@ -98,10 +98,10 @@ int pass_two(char *filename) {
             pos += next_op(pos,FALSE);
         }
         /*in the first pass we took care of all directives that are not .entry, so now we can skip them(step 4)*/
-        if(ent_ext(pos) == 2 || is_data(pos))
+        if(ent_ext(pos) == EXTERN || is_data(pos))
             continue;
 
-        if(ent_ext(pos) == 1) { /*entry directive(step 5)*/
+        if(ent_ext(pos) == ENTRY) { /*entry directive(step 5)*/
             /*skipping to the operand of the directive*/
             /*step 6:*/
             pos += next_op(pos,FALSE);
@@ -109,10 +109,10 @@ int pass_two(char *filename) {
             pos +=strlen(label);
             if(!empty(pos)) {
                 fprintf(stderr,"too much operands for .entry ");
-                pass_two_error(filename,num_ln);
+                pass_two_error(file_name,num_ln);
             }
             if(add_ent(label) == FALSE) {
-                pass_two_error(filename,num_ln);
+                pass_two_error(file_name,num_ln);
             }
         } else {
             /*steps 7 and 8*/
@@ -120,30 +120,34 @@ int pass_two(char *filename) {
             /*conditional branch orders*/
             if(opcode>=15 && opcode<=18) {
                 /*find the label that shows up here. skipping to the 3rd operand*/
-                pos += next_op(pos,0);
+                pos += next_op(pos,FALSE);
                 for(i = 0; i < 2; i++)
-                    pos += next_op(pos,1);
+                    pos += next_op(pos,TRUE);
                 scan_label(pos, label);
                 order_type = 'I';
             } else {
                 if(opcode>=30 && opcode <=32) {
                     /*find the label that shows up here skipping to the 1st operand*/
-                    pos += next_op(pos,0);
+                    pos += next_op(pos,FALSE);
                     scan_label(pos, label);
                     order_type = 'J';
                 }
             }
 
             if ((opcode>=15 && opcode<=18) || (opcode>=30 && opcode <=32)) {
-                if (complete_missing_info(label, order_type, IC) == 0)
-                    pass_two_error(filename,num_ln);
+                if (complete_missing_info(label, order_type, IC) == FALSE)
+                    pass_two_error(file_name,num_ln);
             }
-            IC+=4;
+            IC+=WORD;
         }
     }
     /*step 9*/
     free((void *) (line));
     free((void *) (label));
+    if(err2 == FALSE) {
+        /*step 10*/
+        output(file_name);
+    }
     return err2;
 }
 

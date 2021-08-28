@@ -2,7 +2,7 @@
 * Title                 :   Line Analysis
 * Filename              :   line_analysis.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.2
+* Version               :   1.5.0
 *******************************************************************************/
 /** \file line_analysis.c
  * \brief This file contains function that help analyzing each line in the source file
@@ -151,7 +151,6 @@ int meaningless(char *line) {
 *
 *******************************************************************************/
 int start_label(char *line) {
-    int is_label(char *line, int err);
     int i = 0;
     char *word;
     word = (char*) malloc (sizeof(char) * MAX_LINE+1);
@@ -168,7 +167,7 @@ int start_label(char *line) {
     }
     strtok(word,":");
     /*checking if the string before ':' is a valid label*/
-    if(!is_label(word,0)) {
+    if(!is_label(word,FALSE)) {
         free(word);
         return FALSE;
     }
@@ -246,7 +245,7 @@ void scan_label (char *line, char *label) {
 *******************************************************************************/
 int is_data(char *line) {
     int i = 0;
-    int retval = 0;
+    int ret_val = FALSE;
     char *word = (char*) malloc(sizeof(char) * (MAX_LINE+1));
     alloc_check(word);
     while(!isspace((int)line[i])) {
@@ -255,15 +254,15 @@ int is_data(char *line) {
     }
     word[i] = '\0';
     if(strcmp(word,".db")==0)
-        retval =  1;
+        ret_val =  DB;
     if(strcmp(word,".dh")==0)
-        retval = 2;
+        ret_val = DH;
     if(strcmp(word,".asciz")==0)
-        retval = 3;
+        ret_val = ASCIZ;
     if(strcmp(word,".dw")==0)
-        retval = 4;
+        ret_val = DW;
     free(word);
-    return retval;
+    return ret_val;
 }
 
 /******************************************************************************
@@ -284,10 +283,10 @@ int ent_ext(char *line) {
     }
     word[i] = '\0';
     if(strcmp(word,".entry")==0)
-        return 1;
+        return ENTRY;
     if(strcmp(word,".extern") ==0)
-        return 2;
-    return 0;
+        return EXTERN;
+    return FALSE;
 }
 
 /******************************************************************************
@@ -325,6 +324,25 @@ int check_immed(char *line) {
 }
 
 /******************************************************************************
+* Function : num_commas(char *line)
+*//**
+* \section Description: this function checks for te number of commas in this line.
+*                       good for checking for the number of operands
+*
+* \param  		line - the current line(or part of it)
+* \return       TRUE if the structure of the order line is ok
+*******************************************************************************/
+int num_commas(char *line) {
+    int commas = 0;
+    int i;
+    for(i = 0; i< strlen(line); i++) {
+        if(line[i] == ',')
+            commas++;
+    }
+    return commas;
+}
+
+/******************************************************************************
 * Function : order_structure(char *line)
 *//**
 * \section Description: this function checks if the structure of the order line is ok
@@ -343,94 +361,76 @@ int order_structure(char *line) {
     oc = get_opcode(line);
     if(oc == NON_REAL_OPCODE)
         return FALSE;
-    if(next_op(ptr,FALSE) == -1)
+    /*a comma separates every two operands, so for an order with x operands, there are supposed to be x-1 commas*/
+    /*checking if there are not enough operands(checking the other way later*/
+    if(num_commas(line) < (num_ops_expected(oc)-1)) {
+        fprintf(stderr,"error: not enough operands for this order ");
+        return FALSE;
+    }
+    if(next_op(ptr,FALSE) == NON_VALID_OPERAND)
         return FALSE;
     ptr+= next_op(ptr,FALSE);
+
     if(oc==0) { /*3 registers needed*/
-        if(register_num(ptr,TRUE)==-1)
+        if(register_num(ptr,TRUE) == NOT_REG)
             return FALSE;
         for(i = 0; i < 2; i++) {
-            if(next_op(ptr,1) == -1)
+            if(next_op(ptr,TRUE) == NON_VALID_OPERAND)
                 return FALSE;
             ptr+= next_op(ptr,1);
-            if(register_num(ptr,TRUE)==-1)
+            if(register_num(ptr,TRUE) == NOT_REG)
                 return FALSE;
         }
         ptr++;
         ptr+= intlen(ptr);
-        if(empty(ptr))
-            return TRUE;
-        else {
-            fprintf(stderr,"error: too much operands ");
-            return FALSE;
-        }
     }
 
     if(oc==1) { /*2 registers needed*/
-        if(register_num(ptr,TRUE)==-1)
+        if(register_num(ptr,TRUE) == NOT_REG)
             return FALSE;
-        if(next_op(ptr,TRUE) == -1)
+        if(next_op(ptr,TRUE) == NON_VALID_OPERAND)
             return FALSE;
-        ptr+= next_op(ptr,1);
-        if(register_num(ptr,TRUE)==-1)
+        ptr+= next_op(ptr,TRUE);
+        if(register_num(ptr,TRUE) == NOT_REG)
             return FALSE;
         ptr++;
         ptr+= intlen(ptr);
-        if(empty(ptr))
-            return TRUE;
-        else {
-            fprintf(stderr,"error: too much operands ");
-            return FALSE;
-        }
     }
 
-    if(oc<=14  || (oc>=19 && oc<=24)) { /*2 registers needed, immed between them*/
-        if(register_num(ptr,TRUE)==-1)
+    if((oc>=9 && oc<=14)  || (oc>=19 && oc<=24)) { /*2 registers needed, immed between them*/
+        if(register_num(ptr,TRUE)==NOT_REG)
             return FALSE;
-        if(next_op(ptr,TRUE) == -1)
+        if(next_op(ptr,TRUE) == NON_VALID_OPERAND)
             return FALSE;
         ptr+=next_op(ptr,TRUE);
         if(check_immed(ptr) == FALSE)
             return FALSE;
-        if(next_op(ptr,TRUE) == -1)
+        if(next_op(ptr,TRUE) == NON_VALID_OPERAND)
             return FALSE;
         ptr+=next_op(ptr,TRUE);
-        if(register_num(ptr,TRUE)==-1)
+        if(register_num(ptr,TRUE) == NOT_REG)
             return FALSE;
         ptr++;
         ptr+= intlen(ptr);
-        if(empty(ptr))
-            return TRUE;
-        else {
-            fprintf(stderr,"error: too much operands ");
-            return FALSE;
-        }
     }
 
-    if(oc<=18) {
+    if(oc>=15 && oc<=18) { /*2 register, then a label needed*/
         for(i = 0; i < 2; i++) {
-            if(register_num(ptr,TRUE)==-1)
+            if(register_num(ptr,TRUE) == NOT_REG)
                 return FALSE;
-            if(next_op(ptr,TRUE) == -1)
+            if(next_op(ptr,TRUE) == NON_VALID_OPERAND)
                 return FALSE;
             ptr+= next_op(ptr,TRUE);
         }
         if(!is_label(ptr,TRUE))
             return FALSE;
         while(isalpha((int)*ptr) || isdigit((int)*ptr)) ptr++;
-        if(empty(ptr))
-            return TRUE;
-        else {
-            fprintf(stderr,"error: too much operands ");
-            return FALSE;
-        }
     }
-
-    if(oc==30) {
+    if(oc==30) { /*jmp order. a register OR a label needed*/
         int result;
-        if (is_label(ptr, FALSE) == 0 && register_num(ptr, FALSE) == -1) {
+        if (is_label(ptr, FALSE) == FALSE && register_num(ptr, FALSE) == NOT_REG) {
             fprintf(stderr,"error: this operand is not a label or a register ");
-            return 0;
+            return FALSE;
         }
         if (is_label(ptr, FALSE))
             result = 1;
@@ -443,37 +443,22 @@ int order_structure(char *line) {
             ptr++;
             ptr+= intlen(ptr);
         }
-        if(empty(ptr)) return result;
-        else {
-            fprintf(stderr,"error: too much operands ");
-            return FALSE;
-        }
     }
 
-    if(oc <= 32) {
-        if(is_label(ptr,1) == FALSE)
+    if(oc == 31 || oc == 32) { /*a label needed*/
+        if(is_label(ptr,TRUE) == FALSE)
             return FALSE;
         while(isalpha((int)*ptr) || isdigit((int)*ptr))
             ptr++;
-        if(empty(ptr))
-            return TRUE;
-        else {
-            fprintf(stderr,"error: too much operands ");
-            return FALSE;
-        }
     }
 
-    if(oc == 63) {
-        if(empty(ptr))
-            return TRUE;
-        else {
-            fprintf(stderr,"error: too much operands ");
-            return FALSE;
-        }
+    /*we have gone over all the operands*/
+    if(empty(ptr))
+        return TRUE;
+    else {
+        fprintf(stderr,"error: too much operands ");
+        return FALSE;
     }
-    /*every opcode in the table should answer TRUE to one and only one of the if statements mentioned above*/
-    fprintf(stderr,"this should not happen (opcode table error) ");
-    return FALSE;
 }
 
 /******************************************************************************
@@ -494,24 +479,24 @@ int register_num(char *line, int err) {
 
     if(*ptr != '$') {
         if(err == TRUE)
-            fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31)");
-        return -1;
+            fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31) ");
+        return NOT_REG;
     }
     if(!isdigit((int)*(++ptr))) {
         if(err == TRUE)
-            fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31)");
-        return -1;
+            fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31) ");
+        return NOT_REG;
     }
     reg = atoi(ptr);
-    if(!(reg>=0 && reg<=31)) {
+    if(!(reg>=REG_MIN && reg<=REG_MAX)) {
         if(err == TRUE)
             fprintf(stderr, "error: register number %d does not exist ",reg);
-        return -1;
+        return NOT_REG;
     }
     ptr+=intlen(ptr);
     if(*ptr!=(char)0 && !spaceln(*ptr) && *ptr != ',' && !endline(*ptr)) {
         fprintf(stderr,"error: invalid register. after the register number, there can only be a comma or a space character ");
-        return -1;
+        return NOT_REG;
     }
     return reg;
 }
@@ -547,7 +532,7 @@ void scan_op(char *line, char *op) {
 * \param        comma - flag that indicates if a comma should separate this field from the next one
 * \return       -1 if error occurs. otherwise, the distance between the current line position
 *               and the next field
-*******************************************************************************/
+********************************************************************************/
 int next_op(char *line, int comma) {
     char *ptr = line;
     int distance = 0;
@@ -567,7 +552,7 @@ int next_op(char *line, int comma) {
     if(*ptr!=',') {
         fprintf(stderr,"error: a comma should separate operands ");
         free(op);
-        return -1;
+        return NON_VALID_OPERAND;
     }
     ptr++;
     distance++;
@@ -595,11 +580,14 @@ int compatible_args(char *line) {
     int i,d;
     int num_args;
     d = is_data(ptr);
-    ptr+= next_op(ptr,0);
+    ptr+= next_op(ptr,FALSE);
+    if (empty(ptr)) {
+        fprintf(stderr,"error: no arguments in this directive line ");
+    }
     if(d == ASCIZ) { /*.asciz*/
         while(spaceln(*ptr)) ptr++;
         if(*ptr!='\"') {
-            fprintf(stderr,".asciz directive should contain a string in double quotation marks ");
+            fprintf(stderr,"error: .asciz directive should contain a string in double quotation marks ");
             return FALSE;
         }
         ptr++; /*skipping the opening '\"'*/
@@ -630,15 +618,15 @@ int compatible_args(char *line) {
             return FALSE;
     }
     if(intlen(ptr) == 0) {
-        fprintf(stderr,"%s only works with integers ",directive_name);
+        fprintf(stderr,"error: %s only works with integers ",directive_name);
         return FALSE;
     }
     for(i=1; i < num_args; i++) {
-        if (next_op(ptr, TRUE) == -1)
+        if (next_op(ptr, TRUE) == NON_VALID_OPERAND)
             return FALSE;
         ptr += next_op(ptr, TRUE);
         if(intlen(ptr) == 0) {
-            fprintf(stderr,"%s only works with integers ",directive_name);
+            fprintf(stderr,"error: %s only works with integers ",directive_name);
             return FALSE;
         }
         if(intlen(ptr) == 0)
@@ -690,7 +678,7 @@ int get_num_args(char *line) {
         while (spaceln(*ptr))
             ptr++;
         if(*ptr != ',') {
-            fprintf(stderr,"invalid argument");
+            fprintf(stderr,"invalid argument ");
             return 0;
         }
         ptr++;

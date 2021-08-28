@@ -2,7 +2,7 @@
 * Title                 :   The First Assembler Pass
 * Filename              :   pass_one.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.2
+* Version               :   1.5.0
 *******************************************************************************/
 /** \file pass_one.c
  * \brief This module performs the 1st assembler pass
@@ -34,30 +34,27 @@ extern int data_exists;
 * Function Definitions
 *******************************************************************************/
 /******************************************************************************
-* Function : pass_one_error(char *filename, unsigned long num_ln)
+* Function : pass_one_error(char *file_name, unsigned long num_ln)
 *//**
 * \section Description: this function is used when an error in input occurs during the 1st pass.
 *                       it turns on the err1,err_ln flags, and prints out the name of the file and line number,
 *                       so the user will know where the error was found.
 *
-* \param  		filename - the name of the current file
+* \param  		file_name - the name of the current file
 * \param        num_ln - the current line number
 *******************************************************************************/
-void pass_one_error(char* filename,unsigned long num_ln) {
+void pass_one_error(char* file_name,unsigned long num_ln) {
     err1 = TRUE;
     err_ln = TRUE;
-    fprintf(stderr,"[%s | %lu]\n",filename,num_ln);
+    fprintf(stderr,"[%s | %lu]\n",file_name,num_ln);
 }
 
-void pass_one_init(void) {
-
-}
 /******************************************************************************
-* Function : pass_one(char *filename)
+* Function : pass_one(char *file_name)
 *//**
 * \section Description: this function performs the 1st assembler pass on the current file.
 *                       it follows the algorithm mentioned below.
-* \param  		filename - the name of the current file
+* \param  		file_name - the name of the current file
 * \return       0 if no error was found. otherwise:  1
 * \note
  * the algorithm for the 1st assembler pass is as follows:
@@ -87,7 +84,7 @@ void pass_one_init(void) {
  * 20. update the data image table by adding ICF to each value
  * 21. return FALSE to main (begin the 2nd assembler pass) (no error was found)
 *******************************************************************************/
-int pass_one(char *filename) {
+int pass_one(char *file_name) {
     unsigned long num_ln = 0;
     long unsigned IC;
     int label_flag; /*indicates if there is a label in the current line*/
@@ -98,13 +95,16 @@ int pass_one(char *filename) {
     /*step 1:*/
     IC = 100;
     DC = 0;
-	if((curr_file=fopen(filename,"r"))==NULL) {
+    err1 = FALSE;
+    initialize_tables();
+    mem_allocate();
+    if((curr_file=fopen(file_name,"r"))==NULL) {
         fprintf(stderr,"error while opening file");
         err1 = 1;
         return err1;
     }
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
-        fprintf(stderr,"error trying to pass on the file %s", filename);
+        fprintf(stderr,"error trying to pass on the file %s", file_name);
         err1 = 1;
         return err1;
     }
@@ -122,7 +122,7 @@ int pass_one(char *filename) {
             break;
         /*checking if the line length is above the maximum allowed*/
         if(length_check(line) == FALSE) {
-            pass_one_error(filename,num_ln);
+            pass_one_error(file_name,num_ln);
             continue;
         }
 
@@ -145,13 +145,13 @@ int pass_one(char *filename) {
         if(is_data(pos)) {
             /*checking the structure of the directive:*/
             if(compatible_args(pos) == FALSE) {
-                pass_one_error(filename,num_ln);
+                pass_one_error(file_name,num_ln);
             }
             /*step 7:*/
             if(err_ln == FALSE) {
                 if(label_flag) {
                     if(add_symbol(DC, label, DATA,FALSE) == FALSE) {
-                        pass_one_error(filename,num_ln);
+                        pass_one_error(file_name,num_ln);
                     }
                 }
             }
@@ -163,21 +163,21 @@ int pass_one(char *filename) {
             /*step 9:*/
             if(ent_ext(pos)) {
                 /*steps 10,11:*/
-                if(ent_ext(pos) == 2) {
+                if(ent_ext(pos) == EXTERN) {
                     pos+= next_op(pos,FALSE);
                     if(!is_label(pos,TRUE)) {
-                        pass_one_error(filename,num_ln);
+                        pass_one_error(file_name,num_ln);
                     } else {
                         scan_label(pos, label);
                         pos+=strlen(label);
                         if(!empty(pos)) {
                             fprintf(stderr,"too much operands for .extern ");
-                            pass_one_error(filename,num_ln);
+                            pass_one_error(file_name,num_ln);
                         }
 
                         if (err_ln == FALSE) {
                             if (add_symbol(0, label, EXTERNAL, FALSE) == FALSE)
-                                pass_one_error(filename, num_ln);
+                                pass_one_error(file_name, num_ln);
                         }
                     }
                 }
@@ -185,18 +185,18 @@ int pass_one(char *filename) {
                 /*step 12:*/
                 if(label_flag == TRUE) {
                     if(add_symbol(IC, label, CODE,FALSE) == FALSE)
-                        pass_one_error(filename,num_ln);
+                        pass_one_error(file_name,num_ln);
                 }
                 /*steps 13 and 14:*/
                 if(err_ln == FALSE) {
                     if(order_structure(pos) == FALSE)
-                        pass_one_error(filename,num_ln);
+                        pass_one_error(file_name,num_ln);
                 }
                 /*step 15:*/
                 if(err_ln == FALSE) {
                     cmd_to_info(pos,IC);
                 }
-                IC+=4; /*step 16*/
+                IC+=WORD; /*step 16*/
             }
         }
     }
@@ -204,6 +204,7 @@ int pass_one(char *filename) {
     free((void *) (line));
     free ((void *) (label));
     if(err1) {
+        mem_deallocate();
         return err1;
     }
     /*step 18:*/
@@ -212,8 +213,8 @@ int pass_one(char *filename) {
     /*check memory here:*/
     if(!memory_lim(ICF+DCF)) {
         fprintf(stderr,"error: this file requests more storage than this computer has (it has 2^25 bytes of storage) ");
-        err1 = 1;
-		return err1;
+        mem_deallocate();
+        err1 = TRUE;
     }
     /*step 19:*/
     if(data_exists)
@@ -221,7 +222,7 @@ int pass_one(char *filename) {
 
     /*step 20:*/
     update_symbol_table(ICF);
-    return 0;
+    return FALSE;
 }
 
 /*************** END OF FUNCTIONS ***************************************************************************/

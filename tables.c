@@ -2,7 +2,7 @@
 * Title                 :   Table Initialization, Build and Maintenance
 * Filename              :   tables.c
 * Author                :   Itai Kimelman
-* Version               :   1.4.2
+* Version               :   1.5.0
 *******************************************************************************/
 /** \file tables.c
  * \brief This module contains function that maintain all the tables necessary to the assembler
@@ -46,6 +46,21 @@ int data_exists =FALSE; /*indicates if there is data*/
 extern unsigned long DC; /*current data counter*/
 int entries_exist; /*indicates if there are labels that are entry points*/
 /******************************************************************************
+* Function Prototypes
+*******************************************************************************/
+void code_r_cmd(char *line, unsigned opcode, unsigned funct, cmd_in_binary *ptr_to_printable);
+void code_i_cmd(char *line, unsigned opcode, cmd_in_binary *ptr_to_printable);
+void code_j_cmd(char *line, unsigned opcode, cmd_in_binary *ptr_to_printable);
+
+int complete_missing_info_i(unsigned long label_address, unsigned long IC);
+int complete_missing_info_j(char *label, unsigned long label_address, unsigned long IC);
+
+void code_db(char *line, int num_args, int pos);
+void code_dh(char *line, int num_args, int pos);
+void code_asciz(char *line, int pos);
+void code_dw(char *line, int num_args, int pos);
+
+/******************************************************************************
 * Function Definitions
 *******************************************************************************/
 /******************************************************************************
@@ -62,8 +77,6 @@ void initialize_tables(){
     entries_exist = FALSE;
     data_exists = FALSE;
 }
-
-
 /******************************************************************************
 * Functions For Order Lines
 *******************************************************************************/
@@ -84,6 +97,27 @@ unsigned get_opcode(char *line) {
     return opcode_table[order_index(line)].opcode;
 }
 
+/******************************************************************************
+* Function : get_opcode(char *line);
+*//**
+* \section Description: gets the opcode for the current order line.
+*                       used only when the assembler knows this line is an order line
+* \param        opcode - opcode of current order
+* \return 		the expected number of operands for this line
+*******************************************************************************/
+int num_ops_expected(unsigned opcode) {
+    if(opcode == 0 || (opcode >=10 && opcode <=18)) {
+        return 3;
+    }
+
+    if(opcode == 1 || (opcode >=19 && opcode <=24)) {
+        return 2;
+    }
+    if(opcode >=30 && opcode <=32) {
+        return 1;
+    }
+    return 0;
+}
 /******************************************************************************
 * Function : order_index(char *line);
 *//**
@@ -143,12 +177,6 @@ void cmd_to_info(char *line, unsigned IC) {
     unsigned type;
     unsigned opcode = get_opcode(line);
     unsigned funct = get_funct(line);
-    unsigned regs[] = {0,0,0};
-    int i;
-    r_command r_cmd;
-    i_command i_cmd;
-    j_command j_cmd;
-    int can_code_immed;
     cmd_in_binary printable;
     command_image img;
     line+= next_op(line,FALSE);
@@ -161,60 +189,13 @@ void cmd_to_info(char *line, unsigned IC) {
 
     switch(type) {
         case R_CMD:
-            r_cmd.opcode = opcode;
-            regs[0] = atoi(++line);
-            if(opcode == 0) {
-                for(i=1;i<3;i++) {
-                    if(!empty(line))
-                        line+=next_op(line,TRUE);
-                    regs[i] = atoi(++line);
-                }
-            } else {
-                if(!empty(line))
-                    line+=next_op(line,TRUE);
-                regs[2] = atoi(++line);
-            }
-            r_cmd.rs = regs[0];
-            r_cmd.rt = regs[1];
-            r_cmd.rd = regs[2];
-            r_cmd.funct = funct;
-            r_cmd.zeros = 0;
-            printable.r_cmd = r_cmd;
+            code_r_cmd(line, opcode, funct, &printable);
             break;
         case I_CMD:
-            i_cmd.opcode = opcode;
-            if(opcode <= 14 || (opcode>=19 && opcode<=24)) {
-                can_code_immed = TRUE;
-            } else can_code_immed = FALSE;
-            regs[0] = atoi(++line);
-            for(i=1;i<3;i++) {
-                line+= next_op(line,TRUE);
-                if(can_code_immed && i==1) {
-                    i_cmd.immed=atoi(line);
-                } else regs[i] = atoi(++line);
-            }
-            /*happens if the command is an arithmetic or a load/save command:*/
-            if(regs[2]!=0) regs[1] = regs[2];
-            i_cmd.rs = regs[0];
-            i_cmd.rt = regs[1];
-            printable.i_cmd = i_cmd;
+            code_i_cmd(line, opcode, &printable);
             break;
         case J_CMD:
-            j_cmd.opcode = opcode;
-            if(opcode <= 32) {
-                if(*line != '$') {
-                    j_cmd.reg = FALSE;
-                } else {
-                    j_cmd.reg = 1;
-                    j_cmd.address = (unsigned)atoi(++line);
-                }
-
-            }
-            else {
-                j_cmd.reg = FALSE;
-                j_cmd.address = 0;
-            }
-            printable.j_cmd = j_cmd;
+            code_j_cmd(line, opcode, &printable);
             break;
     }
     img.address = IC;
@@ -225,7 +206,99 @@ void cmd_to_info(char *line, unsigned IC) {
 }
 
 /******************************************************************************
-* Function : cmd_to_info(char *line, unsigned IC);
+* Function : code_r_cmd(char *line, unsigned opcode, unsigned funct, cmd_in_binary *ptr_to_printable);
+*//**
+* \section Description: this function codes R commands into machine code
+* \param  		line - the current line(points after order)
+* \param        opcode - opcode of this R order
+* \param        funct - funct of this R order
+* \param        ptr_to_printable - pointer to a union with a divided word, which allows the assembler to divide orders into bytes later on
+*******************************************************************************/
+void code_r_cmd(char *line, unsigned opcode, unsigned funct, cmd_in_binary *ptr_to_printable) {
+    unsigned regs[] = {0,0,0};
+    int i;
+    r_command r_cmd;
+    r_cmd.opcode = opcode;
+    regs[0] = atoi(++line);
+    if(opcode == 0) {
+        for(i=1;i<3;i++) {
+            if(!empty(line))
+                line+=next_op(line,TRUE);
+            regs[i] = atoi(++line);
+        }
+    } else {
+        if(!empty(line))
+            line+=next_op(line,TRUE);
+        regs[2] = atoi(++line);
+    }
+    r_cmd.rs = regs[0];
+    r_cmd.rt = regs[1];
+    r_cmd.rd = regs[2];
+    r_cmd.funct = funct;
+    r_cmd.zeros = 0;
+    ptr_to_printable->r_cmd = r_cmd;
+}
+
+/******************************************************************************
+* Function : code_i_cmd(char *line, unsigned opcode, cmd_in_binary *ptr_to_printable);
+*//**
+* \section Description: this function codes I commands into machine code
+* \param  		line - the current line(points after order)
+* \param        opcode - opcode of this I order
+* \param        ptr_to_printable - pointer to a union with a divided word, which allows the assembler to divide orders into bytes later on
+*******************************************************************************/
+void code_i_cmd(char *line, unsigned opcode, cmd_in_binary *ptr_to_printable) {
+    int can_code_immed;
+    unsigned regs[] = {0,0,0};
+    int i;
+    i_command i_cmd;
+    i_cmd.opcode = opcode;
+    if(opcode <= 14 || (opcode>=19 && opcode<=24)) {
+        can_code_immed = TRUE;
+    } else can_code_immed = FALSE;
+    regs[0] = atoi(++line);
+    for(i=1;i<3;i++) {
+        line+= next_op(line,TRUE);
+        if(can_code_immed && i==1) {
+            i_cmd.immed=atoi(line);
+        } else regs[i] = atoi(++line);
+    }
+    /*happens if the command is an arithmetic or a load/save command:*/
+    if(regs[2]!=0) regs[1] = regs[2];
+    i_cmd.rs = regs[0];
+    i_cmd.rt = regs[1];
+    ptr_to_printable->i_cmd = i_cmd;
+}
+
+/******************************************************************************
+* Function : code_j_cmd(char *line, unsigned opcode, cmd_in_binary *ptr_to_printable);
+*//**
+* \section Description: this function codes I commands into machine code
+* \param  		line - the current line(points after order)
+* \param        opcode - opcode of this I order
+* \param        ptr_to_printable - pointer to a union with a divided word, which allows the assembler to divide orders into bytes later on
+*******************************************************************************/
+void code_j_cmd(char *line, unsigned opcode, cmd_in_binary *ptr_to_printable) {
+    j_command j_cmd;
+    j_cmd.opcode = opcode;
+    if(opcode <= 32) {
+        if(*line != '$') {
+            j_cmd.reg = FALSE;
+        } else {
+            j_cmd.reg = 1;
+            j_cmd.address = (unsigned)atoi(++line);
+        }
+
+    }
+    else {
+        j_cmd.reg = FALSE;
+        j_cmd.address = 0;
+    }
+    ptr_to_printable->j_cmd = j_cmd;
+}
+
+/******************************************************************************
+* Function : complete_missing_info(char *label,char order_type, unsigned IC);
 *//**
 * \section Description: this function the missing info about conditional branch and J orders, where labels can show as operands
 *                       and the assembler does not know their address when passing on the file for the 1st time
@@ -243,7 +316,7 @@ void cmd_to_info(char *line, unsigned IC) {
 * \return       TRUE if the info was completed successfully. FALSE if error was found
 *******************************************************************************/
 int complete_missing_info(char *label, char order_type, unsigned long IC) {
-    unsigned long address = 0;
+    unsigned long label_address;
     int i;
     symbol_node *curr = symbol_table;
     if(order_type == 'J') {
@@ -256,7 +329,7 @@ int complete_missing_info(char *label, char order_type, unsigned long IC) {
     /*pass on the symbol table.*/
     while(curr!=NULL) {
         if(strcmp(label,curr->symbol) == 0) {
-            address = curr->address;
+            label_address = curr->address;
             break;
         }
         curr = curr->next;
@@ -266,35 +339,66 @@ int complete_missing_info(char *label, char order_type, unsigned long IC) {
         return FALSE;
     }
     if(order_type == 'I') {
-        if(!in_lim((long int)(address-IC),16)) {
-            fprintf(stderr,"error: immed value should be in 16 bit limits ");
-            return FALSE;
-        }
-        if(address == 0) {
-            fprintf(stderr,"error: external symbol cannot be used in conditional branch orders ");
-            return FALSE;
-        }
-        for(i = 0; i < code_img_length; i++) {
-            if(code_img[i].address == IC) {
-                code_img[i].machine_code.i_cmd.immed = address - IC;
-                return TRUE;
-            }
-        }
-        fprintf(stderr,"error: this should not happen (algorithm flaw in assembler) ");
-        return FALSE;
+        return complete_missing_info_i(label_address, IC);
     }
     if(order_type == 'J') {
-        if(address == 0) { /*external label*/
-            add_to_ext_list(IC,label);
-        }
-        for(i = 0; i < code_img_length; i++) {
-            if(code_img[i].address == IC) {
-                code_img[i].machine_code.j_cmd.address = address;
-                return TRUE;
-            }
-        }
-        fprintf(stderr,"error: this should not happen (algorithm flaw in assembler) ");
+        return complete_missing_info_j(label, label_address, IC);
+    }
+    fprintf(stderr,"error: this should not happen (algorithm flaw in assembler) ");
+    return FALSE;
+}
+
+/******************************************************************************
+* Function : complete_missing_info_i(unsigned long label_address, unsigned long IC);
+*//**
+* \section Description: this function completes the missing info about conditional branch orders.
+*                       it has the address of the label that shows up as an operand, and it has the instruction counter
+*                       of this order, so it just searches the array for the right order and completes it with the information it has
+* \param        label - the label that shows up as an operand in this J order
+* \param  		IC - address of the conditional branch order
+* \param        label_address - address of the label that shows up as an operand in he order
+* \return       TRUE if no error was found (see \errors in complete_missing_info)
+*******************************************************************************/
+int complete_missing_info_i(unsigned long label_address, unsigned long IC) {
+    int i;
+    if(!in_lim((long int)(label_address-IC),16)) {
+        fprintf(stderr,"error: immed value should be in 16 bit limits ");
         return FALSE;
+    }
+    if(label_address == 0) {
+        fprintf(stderr,"error: external symbol cannot be used in conditional branch orders ");
+        return FALSE;
+    }
+    for(i = 0; i < code_img_length; i++) {
+        if(code_img[i].address == IC) {
+            code_img[i].machine_code.i_cmd.immed = label_address - IC;
+            return TRUE;
+        }
+    }
+    fprintf(stderr,"error: this should not happen (algorithm flaw in assembler) ");
+    return FALSE;
+}
+
+/******************************************************************************
+* Function : complete_missing_info_j(unsigned long label_address);
+*//**
+* \section Description: this function completes the missing info about J orders that are not "stop".
+*                       it searches the array for this J order and puts the parameter "label_address"
+*                       into the "address" field. if the label is external, it will be added to the external label list
+* \param        label_address - address of the label that shows up as an operand in he order
+* \param        IC - address of this J order
+* \return       TRUE if no error was found (see \errors in complete_missing_info)
+*******************************************************************************/
+int complete_missing_info_j(char *label, unsigned long label_address, unsigned long IC) {
+    int i;
+    if(label_address == 0) { /*external label*/
+        add_to_ext_list(IC,label);
+    }
+    for(i = 0; i < code_img_length; i++) {
+        if(code_img[i].address == IC) {
+            code_img[i].machine_code.j_cmd.address = label_address;
+            return TRUE;
+        }
     }
     fprintf(stderr,"error: this should not happen (algorithm flaw in assembler) ");
     return FALSE;
@@ -312,8 +416,6 @@ int complete_missing_info(char *label, char order_type, unsigned long IC) {
 *******************************************************************************/
 void data_to_info(char *line) {
     int d = is_data(line);
-    int i;
-    unsigned byte;
     int len;
     int num_args;
     int pos = data_img_length;    /* we start to update in this position */
@@ -324,7 +426,7 @@ void data_to_info(char *line) {
     line+= next_op(line,FALSE);
     if(d==3) {
         len = asciz_len(line);          /* num characters */
-        data_img_length += len+1;       /* placeholder for null term */
+        data_img_length += (len+1);       /* placeholder for null term */
     } else {
         num_args = get_num_args(line);  /* num numbers */
         data_img_length += num_args;
@@ -334,56 +436,111 @@ void data_to_info(char *line) {
 
     switch(d) {
         case DB:
-            data_img[pos].machine_code.b = atoi(line);
-            data_img[pos].address=DC;
-            data_img[pos].bytes_taken = 1;
-            DC+=1;
-            for(i=1;i< num_args;i++) {
-                line+=next_op(line,TRUE);
-                data_img[pos+i].machine_code.b = atoi(line);
-                data_img[pos+i].address=DC;
-                data_img[pos+i].bytes_taken = 1;
-                DC+=1;
-            }
+            code_db(line,num_args,pos);
             break;
         case DH:
-            data_img[pos].machine_code.dh.img = atoi(line);
-            data_img[pos].address=DC;
-            data_img[pos].bytes_taken = 2;
-            DC+=2;
-            for(i=1;i< num_args;i++) {
-                line+=next_op(line,TRUE);
-                data_img[pos+i].machine_code.dh.img = atoi(line);
-                data_img[pos+i].address=DC;
-                data_img[pos+i].bytes_taken = 2;
-                DC+=2;
-            }
+            code_dh(line,num_args,pos);
             break;
         case ASCIZ:
-            line++; /*skipping the opening '\"'*/
-            for(i=0;i<len;i++) { /*encoding all the chars of the directive*/
-                byte = (unsigned)(line[i]);
-                data_img[pos+i].machine_code.b = byte;
-                data_img[pos+i].address = DC++;
-                data_img[pos+i].bytes_taken = 1;
-            }/*adding the null character*/
-            data_img[pos+i].machine_code.b = 0;
-            data_img[pos+i].address = DC++;
-            data_img[pos+i].bytes_taken = 1;
+            code_asciz(line,pos);
             break;
         case DW:
-            data_img[pos].machine_code.dw.img = atol(line);
-            data_img[pos].address=DC;
-            data_img[pos].bytes_taken = 4;
-            DC+=4;
-            for(i=1;i< num_args;i++) {
-                line+=next_op(line,TRUE);
-                data_img[pos+i].machine_code.dw.img = atol(line);
-                data_img[pos+i].address=DC;
-                data_img[pos+i].bytes_taken = 4;
-                DC+=4;
-            }
+            code_dw(line,num_args,pos);
             break;
+    }
+}
+
+/******************************************************************************
+* Function : code_db(char *line, int num_args, int pos);
+*//**
+* \section Description: this function puts the data into the data image table for .db directives
+* \param  		line - pointer to the current line after the directive
+* \param        num_args - the number of arguments in this line
+* \param        pos - index of the 1st cell in the data image table that I didnt code the data into
+*******************************************************************************/
+void code_db(char *line, int num_args, int pos) {
+    int i;
+    data_img[pos].machine_code.b = atoi(line);
+    data_img[pos].address=DC;
+    data_img[pos].bytes_taken = ONE_BYTE;
+    DC+=ONE_BYTE;
+    for(i=1;i< num_args;i++) {
+        line+=next_op(line,TRUE);
+        data_img[pos+i].machine_code.b = atoi(line);
+        data_img[pos+i].address=DC;
+        data_img[pos+i].bytes_taken = ONE_BYTE;
+        DC+=ONE_BYTE;
+    }
+}
+
+/******************************************************************************
+* Function : code_dh(char *line, int num_args, int pos);
+*//**
+* \section Description: this function puts the data into the data image table for .dh directives
+* \param  		line - pointer to the current line after the directive
+* \param        num_args - the number of arguments in this line
+* \param        pos - index of the the 1st cell in the data image table that I didnt code the data into
+*******************************************************************************/
+void code_dh(char *line, int num_args, int pos) {
+    int i;
+    data_img[pos].machine_code.dh.img = atoi(line);
+    data_img[pos].address=DC;
+    data_img[pos].bytes_taken = HALF_WORD;
+    DC+=HALF_WORD;
+    for(i=1;i< num_args;i++) {
+        line+=next_op(line,TRUE);
+        data_img[pos+i].machine_code.dh.img = atoi(line);
+        data_img[pos+i].address=DC;
+        data_img[pos+i].bytes_taken = HALF_WORD;
+        DC+=HALF_WORD;
+    }
+}
+
+/******************************************************************************
+* Function : code_asciz(char *line, int num_args, int pos);
+*//**
+* \section Description: this function puts the data into the data image table for .asciz directives
+* \param  		line - pointer to the current line after the directive
+* \param        pos - index of the 1st cell in the data image table that I didnt code the data into
+*******************************************************************************/
+void code_asciz(char *line, int pos) {
+    int i;
+    line++; /*skipping the opening '\"'*/
+    /*encoding all the chars of the directive to all the cells left but the last one*/
+    /*last cell in array saved for '\0'*/
+    for(i=pos;i<(data_img_length-1);i++) {
+        data_img[i].machine_code.b = (unsigned)(line[i]);
+        data_img[i].address = DC;
+        data_img[i].bytes_taken = ONE_BYTE;
+        DC+=ONE_BYTE;
+    }
+    /*adding the null character*/
+    data_img[i].machine_code.b = 0;
+    data_img[i].address = DC;
+    data_img[i].bytes_taken = ONE_BYTE;
+    DC+=ONE_BYTE;
+}
+
+/******************************************************************************
+* Function : code_dw(char *line, int num_args, int pos);
+*//**
+* \section Description: this function puts the data into the data image table for .dw directives
+* \param  		line - pointer to the current line after the directive
+* \param        num_args - the number of arguments in this line
+* \param        pos - index of the 1st cell in the data image table that I didnt code the data into
+*******************************************************************************/
+void code_dw(char *line, int num_args, int pos) {
+    int i;
+    data_img[pos].machine_code.dw.img = atol(line);
+    data_img[pos].address=DC;
+    data_img[pos].bytes_taken = WORD;
+    DC+=WORD;
+    for(i=1;i< num_args;i++) {
+        line+=next_op(line,TRUE);
+        data_img[pos+i].machine_code.dw.img = atol(line);
+        data_img[pos+i].address=DC;
+        data_img[pos+i].bytes_taken = WORD;
+        DC+=WORD;
     }
 }
 
