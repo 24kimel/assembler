@@ -16,6 +16,10 @@
 /******************************************************************************
 * Constants
 *******************************************************************************/
+/* return status for top level functions */
+#define STATUS_OK 	0
+#define STATUS_ERR	1
+
 /*argument amount limits*/
 enum ARG_LIMITS {
     MIN_ARGUMENTS =  2,

@@ -71,18 +71,18 @@ char* filename(char* name){
 *
 * \param  		argc - the number of arguments in the command line
 *
-* \return 		TRUE if there is at least 1 input file, and at most 3. FALSE if not
+* \return 		STATUS_OK if there is at least 1 input file, and at most 3. STATUS_ERR if not
 *******************************************************************************/
 int num_files (int argc) {
     if(argc<MIN_ARGUMENTS) {
-        fprintf(stderr,"error: no input files");
-        return FALSE;
+        fprintf(stderr,"error: no input files\n");
+        return STATUS_ERR;
     }
     if(argc>MAX_ARGUMENTS) {
-        fprintf(stderr,"error: too many input files(more than 3)");
-        return FALSE;
+        fprintf(stderr,"error: too many input files (more than 3)\n");
+        return STATUS_ERR;
     }
-    return TRUE;
+    return STATUS_OK;
 }
 
 /******************************************************************************
@@ -113,7 +113,7 @@ void new_line_check(int *space_count,unsigned long *address, FILE *ob_file) {
 * \section Description: creates output files (see \brief)
 *
 * \param  		file_name - the name of the source file
-* \return       0 if no error was found. otherwise:  1
+* \return       STATUS_OK if no error was found. otherwise:  STATUS_ERR
 *
 *******************************************************************************/
 int output(char *file_name) {
@@ -145,7 +145,7 @@ int output(char *file_name) {
             free(ob_fname);
             free(ent_fname);
             free(ext_fname);
-            return 1;
+            return STATUS_ERR;
         }
         write_to_ent_file(ent_file);
     }
@@ -159,7 +159,7 @@ int output(char *file_name) {
             free(ob_fname);
             free(ent_fname);
             free(ext_fname);
-            return 1;
+            return STATUS_ERR;
         }
         write_to_ext_file(ext_file);
     }
@@ -171,13 +171,13 @@ int output(char *file_name) {
         free(ent_fname);
         free(ob_fname);
         free(ext_fname);
-        return 1;
+        return STATUS_ERR;
     }
     write_to_ob_file(ob_file,ob_fname);
     free(ob_fname);
     free(ent_fname);
     free(ext_fname);
-    return 0;
+    return STATUS_OK;
 }
 
 /******************************************************************************

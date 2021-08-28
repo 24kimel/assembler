@@ -44,8 +44,8 @@ extern int data_exists;
 * \param        num_ln - the current line number
 *******************************************************************************/
 void pass_one_error(char* file_name,unsigned long num_ln) {
-    err1 = TRUE;
-    err_ln = TRUE;
+    err1 = STATUS_ERR;
+    err_ln = STATUS_ERR;
     fprintf(stderr,"[%s | %lu]\n",file_name,num_ln);
 }
 
@@ -55,7 +55,7 @@ void pass_one_error(char* file_name,unsigned long num_ln) {
 * \section Description: this function performs the 1st assembler pass on the current file.
 *                       it follows the algorithm mentioned below.
 * \param  		file_name - the name of the current file
-* \return       0 if no error was found. otherwise:  1
+* \return       STATUS_OK if no error was found. otherwise: STATUS_ERR
 * \note
  * the algorithm for the 1st assembler pass is as follows:
  * 1. initialize IC = 100, DC = 0
@@ -95,16 +95,16 @@ int pass_one(char *file_name) {
     /*step 1:*/
     IC = 100;
     DC = 0;
-    err1 = FALSE;
+    err1 = STATUS_OK;
 
     if((curr_file=fopen(file_name,"r"))==NULL) {
         fprintf(stderr,"error while opening file");
-        err1 = 1;
+        err1 = STATUS_ERR;
         return err1;
     }
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
         fprintf(stderr,"error trying to pass on the file %s", file_name);
-        err1 = 1;
+        err1 = STATUS_ERR;
         return err1;
     }
     line = (char*) malloc(sizeof(char)*(MAX_LINE + 1));
@@ -202,7 +202,7 @@ int pass_one(char *file_name) {
     /*step 17:*/
     free((void *) (line));
     free ((void *) (label));
-    if(err1) {
+    if(err1 == STATUS_ERR) {
         return err1;
     }
     /*step 18:*/
@@ -211,7 +211,7 @@ int pass_one(char *file_name) {
     /*check memory here:*/
     if(!memory_lim(ICF+DCF)) {
         fprintf(stderr,"error: this file requests more storage than this computer has (it has 2^25 bytes of storage) ");
-        err1 = TRUE;
+        err1 = STATUS_ERR;
         return err1;
     }
     /*step 19:*/
@@ -220,7 +220,7 @@ int pass_one(char *file_name) {
 
     /*step 20:*/
     update_symbol_table(ICF);
-    return FALSE;
+    return STATUS_OK;
 }
 
 /*************** END OF FUNCTIONS ***************************************************************************/

@@ -35,7 +35,7 @@ int err2;
 *
 *******************************************************************************/
 void pass_two_error(char* file_name,unsigned long num_ln) {
-    err2 = TRUE;
+    err2 = STATUS_ERR;
     fprintf(stderr,"[%s | %lu]\n",file_name,num_ln);
 }
 
@@ -45,7 +45,7 @@ void pass_two_error(char* file_name,unsigned long num_ln) {
 * \section Description: this function performs the 2nd assembler pass on the current file.
 *                       it follows the algorithm mentioned below.
 * \param  		file_name - the name of the current file
-* \return       0 if no error was found. otherwise:  1
+* \return       STATUS_OK if no error was found. otherwise:  STATUS_ERR
 *\note
  * the algorithm for the 2nd assembler pass is as follows:
  * 1. read the next line. if the file has ended : go to step 9.
@@ -70,12 +70,12 @@ int pass_two(char *file_name) {
     unsigned opcode;
     int i;
     char order_type;
-    err2 = FALSE;
+    err2 = STATUS_OK;
     curr_file = fopen(file_name,"r");
     alloc_check(curr_file);
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
         fprintf(stderr,"error trying to pass on the file %s\n", file_name);
-        err2 = TRUE;
+        err2 = STATUS_ERR;
         return err2;
     }
     line = (char*) malloc (sizeof(char) * MAX_LINE+1);

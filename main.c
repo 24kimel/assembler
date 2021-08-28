@@ -32,29 +32,33 @@ int main(int argc, char **argv) {
     int i, err, err_total;
     char *curr_file;
     err_total = 0;
-    if(num_files(argc) == 0) return 1;
+    if(num_files(argc) == STATUS_ERR) return STATUS_ERR;
     for(i = 1; i< argc; i++) {
         if ((curr_file = filename(argv[i])) != NULL) {
             initialize_tables();
             mem_allocate();
             err = pass_one(curr_file);
-            err_total += err;
-            if (err) {
+            if (err == STATUS_ERR) {
+				err_total++;				
                 mem_deallocate();
                 continue;
             }
             err = pass_two(curr_file);
-            err_total += err;
-            if (err) {
+            if (err == STATUS_ERR) {
+				err_total++;
                 mem_deallocate();
                 continue;
             }
             err = output(curr_file);
-            err_total += err;
+			if (err == STATUS_ERR) {			
+            	err_total++;
+			}
             mem_deallocate();
-        }
+        } else {
+			err_total++;
+		}
     }
-    return err_total;
+    return (err_total == 0) ? STATUS_OK : STATUS_ERR;
 }
 
 /*************** END OF FUNCTIONS ***************************************************************************/
