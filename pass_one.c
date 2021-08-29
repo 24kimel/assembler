@@ -2,7 +2,7 @@
 * Title                 :   The First Assembler Pass
 * Filename              :   pass_one.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.3
+* Version               :   1.5.4
 *******************************************************************************/
 /** \file pass_one.c
  * \brief This module performs the 1st assembler pass
@@ -138,7 +138,7 @@ int pass_one(char *file_name) {
             scan_label(pos, label); /*keeping the label for later*/
             /*step 5:*/
             label_flag=TRUE;
-            pos+= next_op(pos,FALSE);
+            pos+= next_op(pos,FALSE); /*skipping the label so that we won't try to parse it as something else*/
         }
         /*step 6:*/
         if(is_data(pos)) {
@@ -211,9 +211,9 @@ int pass_one(char *file_name) {
     /*step 19:*/
     if(data_exists)
         update_data_img(ICF);
-
     /*step 20:*/
     update_symbol_table(ICF);
+    /*step 21*/
     return STATUS_OK;
 }
 

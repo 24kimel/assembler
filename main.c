@@ -2,7 +2,7 @@
 * Title                 :   Main Program
 * Filename              :   main.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.3
+* Version               :   1.5.4
 *******************************************************************************/
 /** \file main.c
  * \brief This module contains the main function of the assembler
@@ -20,7 +20,7 @@
 *//**
 * \section Description Description: The main function of the assembler.
 * it takes each input file (as an argument in argv), and tries to translate it into machine code.
-* if an error occurs in one output file, the assembler will still run perfectly on the rest.
+* if an error occurs in one input file, the assembler will still run perfectly on the rest.
 *
 * \param  		argc - the number of arguments
 * \param        argv - the arguments

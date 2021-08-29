@@ -2,7 +2,7 @@
 * Title                 :   Memory management
 * Filename              :   memory_mgmt.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.3
+* Version               :   1.5.4
 *******************************************************************************/
 
 /******************************************************************************
@@ -31,7 +31,7 @@ void deallocate_symbol_table();
 /******************************************************************************
 * Function : alloc_check(void *);
 *//**
-* \section Description Description:
+* \section Description:
 * this function checks if the pointer given points to NULL, and terminates the program if it is
 * This function is used to check if memory allocation failed after using malloc, calloc or realloc
 *
@@ -49,7 +49,7 @@ void alloc_check(void * x) {
 /******************************************************************************
 * Function : mem_allocate();
 *//**
-* \section Description Description:
+* \section Description:
 * this functions allocates memory for the code image and data image table
 * This function is used to allocate memory for the code image and data image table
 * before we read the source file.
@@ -70,10 +70,10 @@ void mem_allocate() {
 /******************************************************************************
 * Function : mem_deallocate();
 *//**
-* \section Description Description:
+* \section Description:
 * this functions deallocates memory for all of the tables
 * This function is used to deallocate memory for all of the tables before we
-* terminate the program
+* terminate the program/ go to another source file
 *
 *******************************************************************************/
 void mem_deallocate() {

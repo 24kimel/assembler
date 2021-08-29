@@ -2,7 +2,7 @@
 * Title                 :   Table Initialization, Build and Maintenance
 * Filename              :   tables.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.3
+* Version               :   1.5.4
 *******************************************************************************/
 /** \file tables.c
  * \brief This module contains function that maintain all the tables necessary to the assembler
@@ -106,6 +106,7 @@ unsigned get_opcode(char *line) {
 * \return 		the expected number of operands for this line
 *******************************************************************************/
 int num_ops_expected(unsigned opcode) {
+    /*according to project guidelines*/
     if(opcode == 0 || (opcode >=10 && opcode <=18)) {
         return 3;
     }
@@ -133,12 +134,13 @@ int num_ops_expected(unsigned opcode) {
 int order_index(char *line) {
     int i;
     char *word = NULL;
-	word = (char *)malloc(MAX_LINE+1);
-	alloc_check(word);
+    word = (char *)malloc(MAX_LINE+1);
+    alloc_check(word);
     scan_op(line, word);
+    /*looking for it in the opcode table, which is sorted alphabetically*/
     for(i = 0; i < NUM_ORDERS; i++) {
         if(strcmp(word,opcode_table[i].name)<0) {
-            fprintf(stderr, "error: order %s does not exist ", word);
+            fprintf(stderr, "error: order (%s) does not exist ", word);
             free(word);
             return NON_REAL_INDEX;
         }
@@ -147,7 +149,8 @@ int order_index(char *line) {
             return i;
         }
     }
-    fprintf(stderr, "error: order %s does not exist ", word);
+    /*order is not in the table*/
+    fprintf(stderr, "error: order (%s) does not exist ", word);
     free(word);
     return NON_REAL_INDEX;
 }
@@ -193,11 +196,11 @@ void cmd_to_info(char *line, unsigned IC) {
         case R_CMD:
             code_r_cmd(line, opcode, funct, &printable);
             break;
-		case I_CMD:
-        	code_i_cmd(line, opcode, &printable);
+        case I_CMD:
+            code_i_cmd(line, opcode, &printable);
             break;
-		case J_CMD:
-        	code_j_cmd(line, opcode, &printable);
+        case J_CMD:
+            code_j_cmd(line, opcode, &printable);
             break;
     }
     img.address = IC;
@@ -440,14 +443,14 @@ void data_to_info(char *line) {
         case DB:
             code_db(line,num_args,pos);
             break;
-		case DH:
-        	code_dh(line,num_args,pos);
+        case DH:
+            code_dh(line,num_args,pos);
             break;
-		case ASCIZ:
-    		code_asciz(line,pos);
-        	break;
-		case DW:
-        	code_dw(line,num_args,pos);
+        case ASCIZ:
+            code_asciz(line,pos);
+            break;
+        case DW:
+            code_dw(line,num_args,pos);
             break;
     }
 }
@@ -461,6 +464,7 @@ void data_to_info(char *line) {
 * \param        pos - index of the 1st cell in the data image table that I didnt code the data into
 *******************************************************************************/
 void code_db(char *line, int num_args, int pos) {
+    /*each argument takes 1 byte*/
     int i;
     data_img[pos].machine_code.b = atoi(line);
     data_img[pos].address=DC;
@@ -484,6 +488,7 @@ void code_db(char *line, int num_args, int pos) {
 * \param        pos - index of the the 1st cell in the data image table that I didnt code the data into
 *******************************************************************************/
 void code_dh(char *line, int num_args, int pos) {
+    /*each argument takes 2 bytes*/
     int i;
     data_img[pos].machine_code.dh.img = atoi(line);
     data_img[pos].address=DC;
@@ -506,6 +511,7 @@ void code_dh(char *line, int num_args, int pos) {
 * \param        pos - index of the 1st cell in the data image table that I didnt code the data into
 *******************************************************************************/
 void code_asciz(char *line, int pos) {
+    /*each character takes 1 byte*/
     int i;
     line++; /*skipping the opening '\"'*/
     /*encoding all the chars of the directive to all the cells left but the last one*/
@@ -532,6 +538,7 @@ void code_asciz(char *line, int pos) {
 * \param        pos - index of the 1st cell in the data image table that I didnt code the data into
 *******************************************************************************/
 void code_dw(char *line, int num_args, int pos) {
+    /*each argument takes 4 bytes*/
     int i;
     data_img[pos].machine_code.dw.img = atol(line);
     data_img[pos].address=DC;
@@ -596,7 +603,7 @@ int add_symbol(unsigned address, char *symbol, int attribute, int is_entry) {
     }
     curr = symbol_table;
     while(curr!=NULL) {
-        if(strcmp((node->symbol),(curr->symbol))==0) {
+        if(strcmp((node->symbol),(curr->symbol))==0) { /*checking if symbol already exists*/
             fprintf(stderr, "symbol (%s) already exists, and cannot be used twice ", node->symbol);
             free(node->symbol);
             free(node);
@@ -630,7 +637,7 @@ int add_ent(char *symbol) {
         if(strcmp(curr->symbol,symbol) == 0) {
             /*don't need a loop. there is only one attribute*/
             if(curr->attribute == EXTERNAL) {
-                fprintf(stderr,"error: this symbol cannot be an entry and external at the same time ");
+                fprintf(stderr,"error: the symbol (%s) cannot be an entry and external at the same time ",symbol);
                 return FALSE;
             }
             curr->is_entry = TRUE;
@@ -638,6 +645,7 @@ int add_ent(char *symbol) {
         }
         curr = curr->next;
     }
+    /*checking if the symbol does not exist, which is not valid*/
     fprintf(stderr,"error: the symbol requested as an entry point does not exist ");
     return FALSE;
 }

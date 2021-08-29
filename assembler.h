@@ -2,7 +2,7 @@
 * Title                 :   Header File for the whole Assembler
 * Filename              :   assembler.h
 * Author                :   Itai Kimelman
-* Version               :   1.5.3
+* Version               :   1.5.4
 *****************************************************************************/
 /** \file assembler.h
  *  \brief This module contains all the function, macros, and constants that the assembler uses

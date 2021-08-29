@@ -2,7 +2,7 @@
 * Title                 :   Output files management
 * Filename              :   files.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.3
+* Version               :   1.5.4
 *******************************************************************************/
 /** \file files.c
  * \brief If there are no errors in the 1st and 2nd pass on
@@ -140,6 +140,7 @@ int output(char *file_name) {
     /*checking for entries*/
     if(entries_exist == TRUE) {
         ent_file = fopen(ent_fname,"w");
+        /*writing to ent file*/
         if(ent_file == NULL) {
             fprintf(stderr,"error: cannot make output file [%s]",ent_fname);
             free(ob_fname);
@@ -164,8 +165,8 @@ int output(char *file_name) {
         write_to_ext_file(ext_file);
     }
 
-    /*writing to object file*/
     ob_file = fopen(ob_fname,"w");
+    /*writing to object file*/
     if(ob_file == NULL) {
         fprintf(stderr,"error: cannot make output file [%s]",ob_fname);
         free(ent_fname);
@@ -201,11 +202,14 @@ int write_to_ob_file(FILE *ob_file, char *ob_fname) {
     unsigned long curr_address;
     int bytes_taken;
     int space_count = 0;
+    /*writing title*/
     fprintf(ob_file,"     %lu %lu\n",ICF-100,DCF);
+    /*writing code image*/
     for(i=0;i<code_img_length;i++) {
         fprintf(ob_file,"%04d %02X %02X %02X %02X\n", code_img[i].address, code_img[i].machine_code.w.b1, code_img[i].machine_code.w.b2, code_img[i].machine_code.w.b3, code_img[i].machine_code.w.b4);
     }
     if (data_exists) {
+        /*writing data image*/
         curr_address = ICF;
         for (i = 0; i < data_img_length; i++) {
             if (i == 0) {
@@ -265,9 +269,8 @@ int write_to_ob_file(FILE *ob_file, char *ob_fname) {
 *******************************************************************************/
 void write_to_ent_file(FILE *ent_file) {
     symbol_node *curr_1 = symbol_table;
-    /*write to ent file*/
     while(curr_1!=NULL)  {
-        if(curr_1->is_entry == TRUE) {
+        if(curr_1->is_entry == TRUE) { /*if the symbol is an entry point, print symbol and address*/
             fprintf(ent_file,"%s %04lu\n", curr_1->symbol, curr_1->address);
         }
         curr_1 = curr_1 ->next;
@@ -287,7 +290,7 @@ void write_to_ent_file(FILE *ent_file) {
 *******************************************************************************/
 void write_to_ext_file(FILE *ext_file) {
     ext_node *curr_2 = external_list;
-    while(curr_2!=NULL) {
+    while(curr_2!=NULL) { /*if the symbol is external, print symbol and address*/
         fprintf(ext_file,"%s %04d\n",curr_2->label, curr_2->address);
         curr_2 = curr_2->next;
     }
