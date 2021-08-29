@@ -149,9 +149,7 @@ int meaningless(char *line) {
 *******************************************************************************/
 int start_label(char *line) {
     int i = 0;
-    char *word;
-    word = (char*) malloc (sizeof(char) * MAX_LINE+1);
-    alloc_check(word);
+    char word[MAX_LINE+1];
     /*scanning the 1st field into word*/
     while(!isspace((int)line[i])) {
         word[i] = line[i];
@@ -159,16 +157,13 @@ int start_label(char *line) {
     }
     word[i] = '\0';
     if(word[i-1] != ':') {
-        free(word);
         return FALSE;
     }
     strtok(word,":");
     /*checking if the string before ':' is a valid label*/
     if(!is_label(word,FALSE)) {
-        free(word);
         return FALSE;
     }
-    free(word);
     return TRUE;
 }
 
@@ -243,8 +238,7 @@ void scan_label (char *line, char *label) {
 int is_data(char *line) {
     int i = 0;
     int ret_val = FALSE;
-    char *word = (char*) malloc(sizeof(char) * (MAX_LINE+1));
-    alloc_check(word);
+    char word[MAX_LINE+1];
     while(!isspace((int)line[i])) {
         word[i] = line[i];
         i++;
@@ -258,7 +252,6 @@ int is_data(char *line) {
         ret_val = ASCIZ;
     if(strcmp(word,".dw")==0)
         ret_val = DW;
-    free(word);
     return ret_val;
 }
 
@@ -274,19 +267,15 @@ int is_data(char *line) {
 int ent_ext(char *line) {
     int i = 0;
     int ret_val = 0;
-    char *word = (char*) malloc(sizeof(char) * (MAX_LINE+1));
-    alloc_check(word);
+    char word[MAX_LINE+1];
     while(!isspace((int)line[i])) {
         word[i] = line[i];
         i++;
     }
     word[i] = '\0';
-    if(strcmp(word,".entry")==0)
-        ret_val = ENTRY;
-    else if(strcmp(word,".extern") ==0)
-        ret_val = EXTERN;
-    free(word);
-    return ret_val;
+    if(strcmp(word,".entry")==0) ret_val = ENTRY;
+    if(strcmp(word,".extern") ==0) ret_val = EXTERN;
+	return ret_val;
 }
 
 /******************************************************************************
@@ -572,8 +561,7 @@ void scan_op(char *line, char *op) {
 int next_op(char *line, int comma) {
     char *ptr = line;
     int distance = 0;
-    char *op = (char *)malloc(MAX_LINE+1);
-    alloc_check(op);
+    char op[MAX_LINE+1];
     scan_op(ptr, op); /*scanning this word to get the length*/
     ptr+=strlen(op); /*skipping this word*/
     distance+=strlen(op); /*adding the correct amount to the distance*/
@@ -582,12 +570,11 @@ int next_op(char *line, int comma) {
         distance++;
     }
     if(!comma) {
-        free(op); /*we have arrived at the next word (for non-comma uses we can return now)*/
+        /*we have arrived at the next word (for non-comma uses we can return now)*/
         return distance;
     }
     if(*ptr!=',') {
         fprintf(stderr,"error: a comma should separate operands ");
-        free(op);
         return NON_VALID_OPERAND;
     }
     /*skipping the comma*/
@@ -598,7 +585,6 @@ int next_op(char *line, int comma) {
         distance++;
     }
     /*we have arrived at the next operand (with separating comma)*/
-    free(op);
     return distance;
 }
 

@@ -62,10 +62,10 @@ void pass_two_error(char* file_name,unsigned long num_ln) {
 int pass_two(char *file_name) {
     FILE *curr_file;
     unsigned long num_ln =0;
-    char *line = NULL;
-    char *pos = NULL;
-    char *label = NULL;
-    unsigned long IC = 100;
+    char line[MAX_LINE+1];
+	char *pos = NULL;
+    char label[MAX_LINE+1];
+	unsigned long IC = 100;
     unsigned opcode;
     int i;
     char order_type;
@@ -80,11 +80,7 @@ int pass_two(char *file_name) {
         err2 = STATUS_ERR;
         return err2;
     }
-    line = (char*) malloc (sizeof(char) * MAX_LINE+1);
-    alloc_check(line);
-    label = (char*) malloc (sizeof(char) * MAX_LABEL+1);
-    alloc_check(label);
-    while(TRUE) {
+	while(TRUE) {
         num_ln++;
         /*step 1:*/
         if(read_line(curr_file,line) == FALSE)
@@ -143,8 +139,6 @@ int pass_two(char *file_name) {
         }
     }
     /*step 9*/
-    free(line);
-    free(label);
     return err2;
 }
 

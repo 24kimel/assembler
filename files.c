@@ -120,14 +120,10 @@ int output(char *file_name) {
     FILE *ob_file;
     FILE *ent_file;
     FILE *ext_file;
-    char *ob_fname = (char*) malloc (MAX_FILE_NAME);
-    char *ent_fname = (char*) malloc (MAX_FILE_NAME);
-    char *ext_fname = (char*) malloc (MAX_FILE_NAME);
+    char ob_fname[MAX_FILE_NAME];
+	char ent_fname[MAX_FILE_NAME];
+	char ext_fname[MAX_FILE_NAME];
     int err_ob_file = STATUS_OK;
-    /*making all the needed file names*/
-    alloc_check(ob_fname);
-    alloc_check(ent_fname);
-    alloc_check(ext_fname);
     file_name=strtok(file_name,".");
     strcpy(ob_fname,file_name);
     strcpy(ent_fname,file_name);
@@ -143,9 +139,6 @@ int output(char *file_name) {
         /*writing to ent file*/
         if(ent_file == NULL) {
             fprintf(stderr,"error: cannot make output file [%s]",ent_fname);
-            free(ob_fname);
-            free(ent_fname);
-            free(ext_fname);
             return STATUS_ERR;
         }
         write_to_ent_file(ent_file);
@@ -157,9 +150,6 @@ int output(char *file_name) {
         /*write to ext file*/
         if(ext_file == NULL) {
             fprintf(stderr,"error: cannot make output file [%s]",ext_fname);
-            free(ob_fname);
-            free(ent_fname);
-            free(ext_fname);
             return STATUS_ERR;
         }
         write_to_ext_file(ext_file);
@@ -169,15 +159,9 @@ int output(char *file_name) {
     /*writing to object file*/
     if(ob_file == NULL) {
         fprintf(stderr,"error: cannot make output file [%s]",ob_fname);
-        free(ent_fname);
-        free(ob_fname);
-        free(ext_fname);
         return STATUS_ERR;
     }
     err_ob_file = write_to_ob_file(ob_file,ob_fname);
-    free(ob_fname);
-    free(ent_fname);
-    free(ext_fname);
     return err_ob_file;
 }
 

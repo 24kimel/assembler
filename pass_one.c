@@ -87,11 +87,11 @@ void pass_one_error(char* file_name,unsigned long num_ln) {
 int pass_one(char *file_name) {
     unsigned long num_ln = 0;
     long unsigned IC;
-    int label_flag; /*indicates if there is a label in the current line*/
-    char *line = NULL; /*the current line*/
-    char *pos = NULL;
-    FILE *curr_file; /*pointer to file*/
-    char *label = NULL; /*saves label (if there is one)*/
+    int label_flag; 			/*indicates if there is a label in the current line*/
+    char line[MAX_LINE+1];		/* the current line */
+    char *pos = NULL;			/* pointer in current line */
+    FILE *curr_file; 			/*pointer to file */
+    char label[MAX_LINE+1];		/*saves label (if there is one) */
     /*step 1:*/
     IC = 100;
     DC = 0;
@@ -107,10 +107,6 @@ int pass_one(char *file_name) {
         err1 = STATUS_ERR;
         return err1;
     }
-    line = (char*) malloc(sizeof(char)*(MAX_LINE + 1));
-    alloc_check(line);
-    label = (char*) malloc(sizeof(char)*(MAX_LINE+1));
-    alloc_check(label);
 
     while(TRUE){
         num_ln++;
@@ -194,8 +190,6 @@ int pass_one(char *file_name) {
         }
     }
     /*step 17:*/
-    free(line);
-    free (label);
     if(err1 == STATUS_ERR) {
         return err1;
     }

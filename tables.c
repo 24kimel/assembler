@@ -133,25 +133,20 @@ int num_ops_expected(unsigned opcode) {
 *******************************************************************************/
 int order_index(char *line) {
     int i;
-    char *word = NULL;
-    word = (char *)malloc(MAX_LINE+1);
-    alloc_check(word);
+    char word[MAX_LINE+1];
     scan_op(line, word);
     /*looking for it in the opcode table, which is sorted alphabetically*/
     for(i = 0; i < NUM_ORDERS; i++) {
         if(strcmp(word,opcode_table[i].name)<0) {
             fprintf(stderr, "error: order (%s) does not exist ", word);
-            free(word);
             return NON_REAL_INDEX;
         }
         if(strcmp(word,opcode_table[i].name)==0) {
-            free(word);
             return i;
         }
     }
     /*order is not in the table*/
     fprintf(stderr, "error: order (%s) does not exist ", word);
-    free(word);
     return NON_REAL_INDEX;
 }
 
