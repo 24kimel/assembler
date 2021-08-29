@@ -2,7 +2,7 @@ CFLAGS=-ansi -Wall -pedantic
 assembler: main.o pass_one.o pass_two.o line_analysis.o tables.o files.o memory_mgmt.o
 	gcc $(CFLAGS) main.o pass_one.o pass_two.o line_analysis.o tables.o files.o memory_mgmt.o -o assembler
 
-main_prog.o: prog.c assembler.h
+main.o: main.c assembler.h
 	gcc -c $(CFLAGS) prog.c -o main.o
 
 pass_one.o: pass_one.c assembler.h
