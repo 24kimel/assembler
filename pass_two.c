@@ -2,7 +2,7 @@
 * Title                 :   The Second Assembler Pass
 * Filename              :   pass_two.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.4
 *******************************************************************************/
 /** \file pass_two.c
  * \brief This module performs the 2nd assembler pass
@@ -11,9 +11,8 @@
 * Includes
 *******************************************************************************/
 #include <stdio.h>
-#include "assembler.h"
 #include <stdlib.h>
-#include <string.h>
+#include "assembler.h"
 
 /******************************************************************************
 * Module Variable Definitions
@@ -71,9 +70,9 @@ int pass_two(char *file_name) {
     int i;
     char order_type;
     err2 = STATUS_OK;
-   	if((curr_file=fopen(file_name,"r"))==NULL) {
+    if((curr_file=fopen(file_name,"r"))==NULL) {
         fprintf(stderr,"error while opening file");
-     	err2 = STATUS_ERR;
+        err2 = STATUS_ERR;
         return err2;
     }
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
@@ -107,15 +106,14 @@ int pass_two(char *file_name) {
         if(ent_ext(pos) == ENTRY) { /*entry directive(step 5)*/
             /*skipping to the operand of the directive*/
             /*step 6:*/
-            pos += next_op(pos,FALSE);
-            scan_label(pos, label);
-            pos +=strlen(label);
-            if(!empty(pos)) {
-                fprintf(stderr,"too much operands for .entry ");
+            if(check_ent_ext(pos) == FALSE) {
                 pass_two_error(file_name,num_ln);
-            }
-            if(add_ent(label) == FALSE) {
-                pass_two_error(file_name,num_ln);
+            } else {
+                pos+= next_op(pos,FALSE); /*skipping directive*/
+                scan_label(pos,label); /*keeping the label that shows up as operand to add the attribute "entry" to it*/
+                if (add_ent(label) == FALSE) { /*adding the attribute "entry" to the label*/
+                    pass_two_error(file_name, num_ln);
+                }
             }
         } else {
             /*steps 7 and 8*/
@@ -124,20 +122,20 @@ int pass_two(char *file_name) {
             if(opcode>=15 && opcode<=18) {
                 /*find the label that shows up here. skipping to the 3rd operand*/
                 pos += next_op(pos,FALSE);
-                for(i = 0; i < 2; i++)
+                for(i = 0; i < 2; i++) /*skipping to label*/
                     pos += next_op(pos,TRUE);
-                scan_label(pos, label);
                 order_type = 'I';
             } else {
                 if(opcode>=30 && opcode <=32) {
                     /*find the label that shows up here skipping to the 1st operand*/
-                    pos += next_op(pos,FALSE);
-                    scan_label(pos, label);
+                    pos += next_op(pos,FALSE); /*skipping to label*/
                     order_type = 'J';
                 }
             }
 
             if ((opcode>=15 && opcode<=18) || (opcode>=30 && opcode <=32)) {
+                scan_label(pos, label); /*scanning label*/
+                /*there is missing info in these order (conditional branch or J orders besides "stop")*/
                 if (complete_missing_info(label, order_type, IC) == FALSE)
                     pass_two_error(file_name,num_ln);
             }

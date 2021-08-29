@@ -2,7 +2,7 @@
 * Title                 :   Line Analysis
 * Filename              :   line_analysis.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.4
 *******************************************************************************/
 /** \file line_analysis.c
  * \brief This file contains function that help analyzing each line in the source file
@@ -267,12 +267,13 @@ int is_data(char *line) {
 *//**
 * \section Description: this function checks if this line is an .entry or .extern directive
 *
+*
 * \param  		line - the current line(or part of it)
 * \return       1 if .entry, 2 if .extern. 0 otherwise
 *******************************************************************************/
 int ent_ext(char *line) {
     int i = 0;
-	int retval = 0;
+    int ret_val = 0;
     char *word = (char*) malloc(sizeof(char) * (MAX_LINE+1));
     alloc_check(word);
     while(!isspace((int)line[i])) {
@@ -281,17 +282,53 @@ int ent_ext(char *line) {
     }
     word[i] = '\0';
     if(strcmp(word,".entry")==0)
-		retval = ENTRY;
+        ret_val = ENTRY;
     else if(strcmp(word,".extern") ==0)
-		retval = EXTERN;
-	free(word);
-	return retval;
+        ret_val = EXTERN;
+    free(word);
+    return ret_val;
+}
+
+/******************************************************************************
+* Function : check_ent_ext(char *line)
+*//**
+* \section Description: this function checks if this line is a valid .entry or .extern directive
+*                       (has only 1 operand which is a label)
+*
+* \param  		line - the current line(or part of it)
+* \return       1 if no error has occured. otherwise: 0
+*******************************************************************************/
+int check_ent_ext (char *line) {
+    char *ptr = line;
+    /*skipping directive*/
+    while(!isspace((int)*ptr))
+        ptr++;
+    while(spaceln(*ptr))
+        ptr++;
+    if(empty(ptr)) {
+        fprintf(stderr,"error: this directive requires an operand ");
+        return FALSE;
+    }
+    /*looking for label*/
+    if(is_label(ptr,TRUE) == FALSE)
+        return FALSE;
+    /*checking it there are more operands than 1*/
+    while(!isspace((int)*ptr))
+        ptr++;
+    /*we have gone over all the operands. ideally, the line should be empty*/
+    if(empty(ptr))
+        return TRUE;
+    else {
+        fprintf(stderr,"error: too much operands for this directive ");
+        return FALSE;
+    }
 }
 
 /******************************************************************************
 * Function : check_immed(char *line)
 *//**
-* \section Description: this function checks the line points to an operand that is a whole number. if not, it reports an error
+* \section Description: this function checks the line points to an operand that is a whole number within 16 bit range.
+*                       if not, it reports an error
 *
 * \param  		line - the current line(or part of it)
 * \return       TRUE if the operand is a valid immed value (integer within 16 bit limits)
@@ -300,22 +337,22 @@ int check_immed(char *line) {
     long value;
     char *ptr = line;
 
-    if(intlen(ptr)==0) {
+    if(intlen(ptr)==0) {/*does not point to a number*/
         fprintf(stderr,"error: a number should be here ");
         return FALSE;
     }
     value = atol(ptr);
-    if(!in_lim(value,16)) {
+    if(!in_lim(value,16)) {/*not in 16 bit limits*/
         fprintf(stderr,"error: immed value should be in 16 bit limits ");
         return FALSE;
     }
     ptr+=intlen(ptr);
-    if(!spaceln(*ptr) && *ptr != ',') {
+    if(!spaceln(*ptr) && *ptr != ',') { /*operand is not just a number (for example "53x")*/
         fprintf(stderr,"error: invalid operand (should be a number) ");
         return FALSE;
     }
     while(spaceln(*ptr)) ptr++;
-    if(*ptr != ',') {
+    if(*ptr != ',') { /*space separated "two parts" of the operand, which is not valid (for example the non-valid immed value requested "1 1")*/
         fprintf(stderr,"error: invalid operand (should be a number) ");
         return FALSE;
     }
@@ -451,7 +488,7 @@ int order_structure(char *line) {
             ptr++;
     }
 
-    /*we have gone over all the operands*/
+    /*we have gone over all the operands. if the line is not empty, there are too many operands*/
     if(empty(ptr))
         return TRUE;
     else {
@@ -481,19 +518,19 @@ int register_num(char *line, int err) {
             fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31) ");
         return NOT_REG;
     }
-    if(!isdigit((int)*(++ptr))) {
+    if(!isdigit((int)*(++ptr))) { /*making sure things like "$+2" activate an error*/
         if(err == TRUE)
             fprintf(stderr, "error: a register should be here (a register starts with a $, followed by an integer between 0 and 31) ");
         return NOT_REG;
     }
     reg = atoi(ptr);
-    if(!(reg>=REG_MIN && reg<=REG_MAX)) {
+    if(!(reg>=REG_MIN && reg<=REG_MAX)) { /*checking for reg limits (0 to 31)*/
         if(err == TRUE)
             fprintf(stderr, "error: register number %d does not exist ",reg);
         return NOT_REG;
     }
     ptr+=intlen(ptr);
-    if(*ptr!=(char)0 && !spaceln(*ptr) && *ptr != ',' && !endline(*ptr)) {
+    if(*ptr!=(char)0 && !spaceln(*ptr) && *ptr != ',' && !endline(*ptr)) { /*making sure things like "$2x" activate an error*/
         fprintf(stderr,"error: invalid register. after the register number, there can only be a comma or a space character ");
         return NOT_REG;
     }
@@ -537,15 +574,15 @@ int next_op(char *line, int comma) {
     int distance = 0;
     char *op = (char *)malloc(MAX_LINE+1);
     alloc_check(op);
-    scan_op(ptr, op);
-    ptr+=strlen(op);
-    distance+=strlen(op);
-    while(spaceln(*ptr)) {
+    scan_op(ptr, op); /*scanning this word to get the length*/
+    ptr+=strlen(op); /*skipping this word*/
+    distance+=strlen(op); /*adding the correct amount to the distance*/
+    while(spaceln(*ptr)) { /*skipping the spaces*/
         ptr++;
         distance++;
     }
     if(!comma) {
-        free(op);
+        free(op); /*we have arrived at the next word (for non-comma uses we can return now)*/
         return distance;
     }
     if(*ptr!=',') {
@@ -553,12 +590,14 @@ int next_op(char *line, int comma) {
         free(op);
         return NON_VALID_OPERAND;
     }
+    /*skipping the comma*/
     ptr++;
     distance++;
-    while(spaceln(*ptr)) {
+    while(spaceln(*ptr)) { /*skipping all the spaces*/
         ptr++;
         distance++;
     }
+    /*we have arrived at the next operand (with separating comma)*/
     free(op);
     return distance;
 }
@@ -606,18 +645,18 @@ int compatible_args(char *line) {
         case DB:
             directive_name = ".db";
             break;
-		case DH:
-        	directive_name = ".dh";
+        case DH:
+            directive_name = ".dh";
             break;
-		case DW:
-        	directive_name = ".dw";
+        case DW:
+            directive_name = ".dw";
             break;
-		default:
+        default:
             fprintf(stderr,"this should not happen [compatible_args switch]");
-        	return FALSE;
+            return FALSE;
     }
     if(intlen(ptr) == 0) {
-        fprintf(stderr,"error: %s only works with integers ",directive_name);
+        fprintf(stderr,"error: (%s) only works with integers ",directive_name);
         return FALSE;
     }
     for(i=1; i < num_args; i++) {
@@ -625,7 +664,7 @@ int compatible_args(char *line) {
             return FALSE;
         ptr += next_op(ptr, TRUE);
         if(intlen(ptr) == 0) {
-            fprintf(stderr,"error: %s only works with integers ",directive_name);
+            fprintf(stderr,"error: (%s) only works with integers ",directive_name);
             return FALSE;
         }
         if(intlen(ptr) == 0)
@@ -667,21 +706,26 @@ int get_num_args(char *line) {
     char *ptr = line;
     int num_args = 1;
     while(spaceln(*ptr)) ptr++;
-    if(intlen(ptr) == 0)
+    if(intlen(ptr) == 0) { /*eliminating things like ".db a,b,c"*/
+        fprintf(stderr,"error: arguments to this directive may only be integers ");
         return 0;
+    }
     ptr+=intlen(ptr);
     while (empty(ptr) == FALSE) {
-        while (spaceln(*ptr))
+        while (spaceln(*ptr)) /*skipping spaces before comma*/
             ptr++;
-        if(*ptr != ',') {
-            fprintf(stderr,"invalid argument ");
+        if(*ptr != ',') { /*skipping*/
+            fprintf(stderr,"error: invalid argument ");
             return 0;
         }
         ptr++;
-        while(spaceln(*ptr)) ptr++;
-        if(intlen(ptr) == 0)
+        while(spaceln(*ptr)) /*skipping spaces after comma*/
+            ptr++;
+        if(intlen(ptr) == 0) { /*eliminating things like ".db a,b,c"*/
+            fprintf(stderr,"error: arguments to this directive may only be integers ");
             return 0;
-        ptr+=intlen(ptr);
+        }
+        ptr+=intlen(ptr); /*skipping this parameter*/
         num_args++;
     }
     return num_args;

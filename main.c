@@ -2,7 +2,7 @@
 * Title                 :   Main Program
 * Filename              :   main.c
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.4
 *******************************************************************************/
 /** \file main.c
  * \brief This module contains the main function of the assembler
@@ -20,7 +20,7 @@
 *//**
 * \section Description Description: The main function of the assembler.
 * it takes each input file (as an argument in argv), and tries to translate it into machine code.
-* if an error occurs in one output file, the assembler will still run perfectly on the rest.
+* if an error occurs in one input file, the assembler will still run perfectly on the rest.
 *
 * \param  		argc - the number of arguments
 * \param        argv - the arguments
@@ -39,24 +39,24 @@ int main(int argc, char **argv) {
             mem_allocate();
             err = pass_one(curr_file);
             if (err == STATUS_ERR) {
-				err_total++;				
+                err_total++;
                 mem_deallocate();
                 continue;
             }
             err = pass_two(curr_file);
             if (err == STATUS_ERR) {
-				err_total++;
+                err_total++;
                 mem_deallocate();
                 continue;
             }
             err = output(curr_file);
-			if (err == STATUS_ERR) {			
-            	err_total++;
-			}
+            if (err == STATUS_ERR) {
+                err_total++;
+            }
             mem_deallocate();
         } else {
-			err_total++;
-		}
+            err_total++;
+        }
     }
     return (err_total == 0) ? STATUS_OK : STATUS_ERR;
 }

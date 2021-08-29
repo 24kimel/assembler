@@ -2,7 +2,7 @@
 * Title                 :   Header File for the whole Assembler
 * Filename              :   assembler.h
 * Author                :   Itai Kimelman
-* Version               :   1.5.1
+* Version               :   1.5.4
 *****************************************************************************/
 /** \file assembler.h
  *  \brief This module contains all the function, macros, and constants that the assembler uses
@@ -215,6 +215,7 @@ void scan_label (char *line, char* label);
 void scan_op(char *line, char *op);
 int next_op(char *line, int comma);
 int ent_ext(char *line);
+int check_ent_ext (char *line);
 int order_structure(char *line);
 int order_index(char *line);
 int is_data(char *line);
