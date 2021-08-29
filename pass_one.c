@@ -98,12 +98,12 @@ int pass_one(char *file_name) {
     err1 = STATUS_OK;
 
     if((curr_file=fopen(file_name,"r"))==NULL) {
-        fprintf(stderr,"error while opening file");
+        fprintf(stderr,"error while opening file %s\n", file_name);
         err1 = STATUS_ERR;
         return err1;
     }
     if((fseek(curr_file,0,SEEK_SET)) != 0) {
-        fprintf(stderr,"error trying to pass on the file %s", file_name);
+        fprintf(stderr,"error trying to pass on the file %s\n", file_name);
         err1 = STATUS_ERR;
         return err1;
     }
@@ -204,7 +204,7 @@ int pass_one(char *file_name) {
     DCF = DC;
     /*check memory here:*/
     if(!memory_lim(ICF+DCF)) {
-        fprintf(stderr,"error: this file requests more storage than this computer has (it has 2^25 bytes of storage) ");
+        fprintf(stderr,"error: this file requests more storage than this computer has (it has 2^25 bytes of storage)\n");
         err1 = STATUS_ERR;
         return err1;
     }

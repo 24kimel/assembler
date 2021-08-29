@@ -54,7 +54,7 @@ void write_to_ext_file(FILE *ext_file);
 *******************************************************************************/
 char* filename(char* name){
     if(strcmp(name+strlen(name)-3,".as")!=0) {
-        fprintf(stderr,"error: non-compatible file format. all input files should be assembly files (file: %s)",name);
+        fprintf(stderr,"error: non-compatible file format. all input files should be assembly files (file: %s)\n",name);
         return NULL;
     }
     return name;

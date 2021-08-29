@@ -25,3 +25,4 @@ memory_mgmt.o: memory_mgmt.c assembler.h
 
 clean:
 	rm -rf *.o assembler
+
