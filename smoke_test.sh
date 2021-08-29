@@ -1,35 +1,53 @@
 #! bin/bash
 # smoke test for assembler
-# runs assembler on one input file and compares output to expected output files
+# script arguments: list of .as files to check without the .as suffix
+# runs assembler on inputs files and compares output to expected output files
 # expecting assemlber binary in currend directory
-# expecting input file (.as) and output files (.ob .ent .ext) in ./smoke_test directory
+# expecting input files (.as) and output files (.ob .ent .ext) in ./smoke_test directory
 
 # test settings
 assembler="assembler.exe"
-asm_filename=$1
+asm_args=""
 EXIT_OK=0
 
-echo "1. cleaning up current directory"
-rm $asm_filename.*
-
-echo "2. executing smoke test:"
+echo "1. PRETEST ... preparing working directory"
+# deleting older files if any
+for arg in "$@"
+do
+	rm $arg.*
+done
 # copying input file to current directory
-cp ./smoke_test/$asm_filename.as .
-echo "	running assembler"
-./$assembler $asm_filename.as
+for arg in "$@"
+do
+	cp ./smoke_test/$arg.as .
+done
+
+echo "2. TEST ... running assembler"
+# build args for assembler - all script args + .as suffix
+for arg in "$@"
+do
+	asm_args+="$arg.as "
+done
+echo "	executing ./$assembler $asm_args"
+./$assembler $asm_args
 # check exit code
 if [ $? -ne $EXIT_OK ]
 then
 	exit $?
 fi
-
+ 
+echo "3. TRIAGE ... comparing outputs:"
 # compare output in current directory to expected output in ./smoke_test directory 
-echo "3. comparing outputs:"
-echo "	comparing .ob file:"
-diff -a -w -s $asm_filename.ob ./smoke_test/$asm_filename.ob
-echo "	comparing .ent file:"
-diff -a -w -s $asm_filename.ent ./smoke_test/$asm_filename.ent
-echo "	comparing .ext file:"
-diff -a -w -s $asm_filename.ext ./smoke_test/$asm_filename.ext
+for arg in "$@"
+do
+	echo "=========================================================="
+	echo "	comparing $arg.ob:"
+	diff -a -w -s $arg.ob ./smoke_test/$arg.ob
+	echo "	comparing $arg.ent:"
+	diff -a -w -s $arg.ent ./smoke_test/$arg.ent
+	echo "	comparing $arg.ext:"
+	diff -a -w -s $arg.ext ./smoke_test/$arg.ext
+	echo "=========================================================="
+done
 
-exit 0
+exit $EXIT_OK
