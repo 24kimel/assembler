@@ -2,8 +2,8 @@
 # smoke test for assembler
 # script arguments: list of .as files to check without the .as suffix
 # runs assembler on inputs files and compares output to expected output files
-# expecting assemlber binary in currend directory
-# expecting input files (.as) and output files (.ob .ent .ext) in ./smoke_test directory
+# expecting assembler binary in ../bin directory
+# expecting input files (.as) and verified output files (.ob .ent .ext) in ./gold directory
 
 # test settings
 assembler="assembler.exe"
@@ -16,10 +16,13 @@ for arg in "$@"
 do
 	rm $arg.*
 done
+# copying assembler binary
+cp ../bin/$assembler .
+
 # copying input file to current directory
 for arg in "$@"
 do
-	cp ./smoke_test/$arg.as .
+	cp ./gold/$arg.as .
 done
 
 echo "2. TEST ... running assembler"
@@ -42,11 +45,11 @@ for arg in "$@"
 do
 	echo "=========================================================="
 	echo "	comparing $arg.ob:"
-	diff -a -w -s $arg.ob ./smoke_test/$arg.ob
+	diff -a -w -s $arg.ob ./gold/$arg.ob
 	echo "	comparing $arg.ent:"
-	diff -a -w -s $arg.ent ./smoke_test/$arg.ent
+	diff -a -w -s $arg.ent ./gold/$arg.ent
 	echo "	comparing $arg.ext:"
-	diff -a -w -s $arg.ext ./smoke_test/$arg.ext
+	diff -a -w -s $arg.ext ./gold/$arg.ext
 	echo "=========================================================="
 done
 
