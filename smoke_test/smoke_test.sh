@@ -16,6 +16,7 @@ for arg in "$@"
 do
 	rm $arg.*
 done
+rm $assembler
 # copying assembler binary
 cp ../bin/$assembler .
 
