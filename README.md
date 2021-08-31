@@ -58,4 +58,16 @@ note that .extern can only be used on a label that is an entry point in another 
 (but this assembler does not check that. it works on each input file individually)
 
 # orders
-an order line 
+an order line
+
+# project structure
+typical project tree with the following directories:
+--> top level: this directory, README
+	--> bin			executable and obj files will be placed here after build
+	--> include		h file(s)
+	--> smoke_test		script for basic test of the assembler
+		--> gold	input and expected output files for the test script
+	--> src			c source files, makefile
+to build the assembler go to /src and run 'make'
+to build the assembler and run basic test go to /src and run 'make test'
+to run basic test go to /smoke_test and run 'bash smoke_test.sh [f1] [f2] [f3]', read the script documentation for more information
