@@ -1,8 +1,10 @@
-# assembler
+# assembler v1.5.4
 C project for the open university. 
 
-this project you see here is a slightly beautified version of a project I sent to the open university
+this project you see here is the final version of a project I sent to the open university
 
 this project got a perfect score
 
 to know about the algorithm behind it, read assember_instructions.pdf
+
+to know the technique behind my specific assembler, read the documentation found in the source file
